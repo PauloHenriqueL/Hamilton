@@ -36,6 +36,6 @@ class Terapeuta(models.Model):
         managed = False
         ordering = ['nome']
         db_table = '"hamilton"."terapeutas"'
-
+# teste
     def __str__(self):
         return self.nome
