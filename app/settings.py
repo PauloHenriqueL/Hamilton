@@ -6,6 +6,8 @@ import dj_database_url
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
+
+
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,6 +37,7 @@ INSTALLED_APPS = [
     'atendimentos',
     'captacao',
     'clinicas',
+    'consulta',
     'modalidades',
     'decano',
     'paciente',
