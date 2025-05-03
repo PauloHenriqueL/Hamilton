@@ -6,7 +6,7 @@ from abordagem.models import Abordagem
 from nucleo.models import Nucleo
 from clinicas.models import Clinica
 from modalidades.models import Modalidade
-from prefeidades.models import Prefeidade
+
 
 
 class Terapeuta(models.Model):
@@ -22,7 +22,6 @@ class Terapeuta(models.Model):
     fk_nucleo = models.ForeignKey(Nucleo, on_delete=models.DO_NOTHING, db_column='fk_nucleo')
     fk_clinica = models.ForeignKey(Clinica, on_delete=models.DO_NOTHING, db_column='fk_clinica')
     fk_modalidade = models.ForeignKey(Modalidade, on_delete=models.DO_NOTHING, db_column='fk_modalidade')
-    fk_prefeidade = models.ForeignKey(Prefeidade, on_delete=models.DO_NOTHING, db_column='fk_prefeidade')
     is_active = models.BooleanField(default=True, null=False)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     updated_at = models.DateTimeField(auto_now=True, null=False)

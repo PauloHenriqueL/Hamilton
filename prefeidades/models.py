@@ -1,12 +1,16 @@
 from django.db import models
 from django.utils import timezone
+from terapeuta.models import Terapeuta
 
 
 class Prefeidade(models.Model):
     pk_prefeidade = models.AutoField(primary_key=True)
-    prefeidade = models.CharField(max_length=20, null=False)
-    idade_maxima = models.IntegerField(null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    fk_terapeuta = models.ForeignKey(Terapeuta, on_delete=models.DO_NOTHING, db_column='fk_terapeuta')
+    infantil = models.BooleanField(deafult='false')
+    adolescente = models.BooleanField(deafult='false')
+    adulto = models.BooleanField(deafult='false')
+    idoso = models.BooleanField(deafult='false')
+    created_at = models.DateTimeField(auto_now=True, null=False)
     updated_at = models.DateTimeField(auto_now=True, null=False)
 
     def save(self, *args, **kwargs):
