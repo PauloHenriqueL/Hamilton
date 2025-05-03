@@ -3,7 +3,7 @@ from . import models
 
 
 class PrefeIdadeAdmin(admin.ModelAdmin):
-    list_display = ('prefeidade',)
-    search_fields = ('prefeidade',)
+    list_display = ('pk_prefeidade',)
+    search_fields = ('pk_prefeidade',)
 
 admin.site.register(models.Prefeidade, PrefeIdadeAdmin)
