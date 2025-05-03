@@ -18,8 +18,6 @@ class Prefeidade(models.Model):
             self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.prefeidade
 
     class Meta:
         managed = False
