@@ -8,8 +8,8 @@ class Prefeidade(models.Model):
     fk_terapeuta = models.ForeignKey(Terapeuta, on_delete=models.DO_NOTHING, db_column='fk_terapeuta')
     infantil = models.BooleanField(default=False)
     adolescente = models.BooleanField(default=False)
-    adulto = models.BooleanField(deafult=False)
-    idoso = models.BooleanField(deafult=False)
+    adulto = models.BooleanField(default=False)
+    idoso = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now=True, null=False)
     updated_at = models.DateTimeField(auto_now=True, null=False)
 
