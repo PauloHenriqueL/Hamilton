@@ -2,7 +2,7 @@ from django.contrib import admin
 from . import models
 
 class AtendimentoAdmin(admin.ModelAdmin):
-    list_display = ('pk_atendimento', 'fk_decano', 'fk_terapeuta')
-    search_fields = ('fk_terapeuta__nome', 'fk_paciente__nome')
+    list_display = ('pk_consulta', 'dat_consulta')
+    search_fields = ('pk_consulta', 'dat_consulta')
 
-admin.site.register(models.Atendimento, AtendimentoAdmin)
+admin.site.register(models.Consulta, AtendimentoAdmin)
