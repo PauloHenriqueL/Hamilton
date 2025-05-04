@@ -6,7 +6,7 @@ from paciente.models import Paciente
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-class Atendimentos(models.Model):
+class Atendimento(models.Model):
     pk_atendimento = models.AutoField(primary_key=True)
     fk_decano = models.ForeignKey(
         Decano, 
