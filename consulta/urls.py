@@ -1,3 +1,8 @@
-from django.test import TestCase
+from django.urls import path
+from . import views
 
-# Create your tests here.
+
+urlpatterns = [
+    path('consulta', views.ConsultaCreateListView.as_view(), name='consulta-list'),
+    path('consulta/<int:pk>', views.ConsultaRetrieveUpdateDestoyView.as_view(), name='consulta-update'),
+]
