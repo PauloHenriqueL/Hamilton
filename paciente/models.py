@@ -11,7 +11,6 @@ class Paciente(models.Model):
     contato_apoio = models.CharField(max_length=20, null=False)
     dat_nascimento = models.DateField(null=False)
     vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, null=False)
-    qtd_sessao = models.IntegerField(null=False)
     fk_captacao = models.ForeignKey(Captacao, on_delete=models.DO_NOTHING, db_column='fk_captacao')
     is_active = models.BooleanField(default=True, null=False)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
