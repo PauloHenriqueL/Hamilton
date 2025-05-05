@@ -6,7 +6,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('api/v1/', include('abordagem.urls')),
-    path('api/v1/', include('atendimentos.urls')),
     path('api/v1/', include('authentication.urls')),  # Inclui as URLs do app 'authentication'
     path('api/v1/', include('captacao.urls')),
     path('api/v1/', include('clinicas.urls')),

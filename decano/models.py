@@ -1,7 +1,5 @@
 from django.db import models
-from django.core.validators import EmailValidator, RegexValidator
 from django.utils import timezone
-import datetime
 
 
 class Decano(models.Model):

@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from atendimentos.models import Atendimento
+from decano.models import Decano
+from terapeuta.models import Terapeuta
+from paciente.models import Paciente
 
 
 class Consulta(models.Model):
@@ -9,14 +11,24 @@ class Consulta(models.Model):
         ('P', 'Paciente'),
     ]
     pk_consulta = models.AutoField(primary_key=True)
-    fk_atendimento = models.ForeignKey(
-        Atendimento,
+    fk_decano = models.ForeignKey(Decano, on_delete=models.DO_NOTHING, db_column='fk_decano')
+    fk_terapeuta = models.ForeignKey(
+        Terapeuta,
         on_delete=models.CASCADE,
-        db_column='fk_atendimento'
+        db_column='fk_terapeuta'
+    )
+    fk_paciente = models.ForeignKey(
+        Paciente,
+        on_delete=models.CASCADE,
+        db_column='fk_paciente'
+    )
+    dat_consulta = models.DateField(null=True, blank=True)
+    vlr_consulta = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
     )
     is_realizado = models.BooleanField()
-    dia = models.IntegerField(null=True, blank=True, validators=[MaxValueValidator(31)])
-    dat_consulta = models.DateField(null=True, blank=True)
     is_pago = models.BooleanField(null=True, blank=True)
     vlr_pago = models.DecimalField(
         max_digits=10,
@@ -34,12 +46,8 @@ class Consulta(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'hamilton.consultas'
+        db_table = '"hamilton"."consultas"'
         constraints = [
-            models.CheckConstraint(
-                check=models.Q(dia__lte=31),
-                name='check_dia_less_equal_31'
-            ),
             models.CheckConstraint(
                 check=models.Q(vlr_pago__gte=0),
                 name='check_vlr_pago_greater_equal_0'
