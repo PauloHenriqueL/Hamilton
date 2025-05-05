@@ -12,7 +12,6 @@ from modalidades.models import Modalidade
 class Terapeuta(models.Model):
     pk_terapeuta = models.AutoField(primary_key=True)
     nome = models.TextField(null=False)
-    usuario = models.TextField(null=False, unique=True)
     email = models.TextField(null=False, unique=True)
     telefone = models.CharField(max_length=20, null=False)
     dat_nascimento = models.DateField(null=False)
