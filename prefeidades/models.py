@@ -5,13 +5,18 @@ from terapeuta.models import Terapeuta
 
 class Prefeidade(models.Model):
     pk_prefeidade = models.AutoField(primary_key=True)
-    fk_terapeuta = models.ForeignKey(Terapeuta, on_delete=models.DO_NOTHING, db_column='fk_terapeuta')
-    infantil = models.BooleanField(default=False)
-    adolescente = models.BooleanField(default=False)
-    adulto = models.BooleanField(default=False)
-    idoso = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now=True, null=False)
-    updated_at = models.DateTimeField(auto_now=True, null=False)
+    fk_terapeuta = models.ForeignKey(
+        Terapeuta, 
+        on_delete=models.DO_NOTHING, 
+        db_column='fk_terapeuta'
+    )
+    is_infantil = models.BooleanField(default=False, null=False)
+    is_adolescente = models.BooleanField(default=False, null=False)
+    is_adulto = models.BooleanField(default=False, null=False)
+    is_idoso = models.BooleanField(default=False, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -22,3 +27,9 @@ class Prefeidade(models.Model):
     class Meta:
         managed = False
         db_table = '"hamilton"."prefeidades"'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['fk_terapeuta'], 
+                name='unique_terapeuta_prefeidade'
+            )
+        ]
