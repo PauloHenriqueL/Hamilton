@@ -6,7 +6,7 @@ from captacao.models import Captacao
 class Paciente(models.Model):
     pk_paciente = models.AutoField(primary_key=True)
     nome = models.TextField(null=False)
-    email = models.TextField(null=False, null=True, blank=True)
+    email = models.TextField(null=True, blank=True)
     telefone = models.CharField(max_length=20, null=False)
     contato_apoio = models.CharField(max_length=20, null=False)
     dat_nascimento = models.DateField(null=False)
