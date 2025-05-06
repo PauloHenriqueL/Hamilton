@@ -3,10 +3,10 @@ from django.utils import timezone
 
 
 class Modalidade(models.Model):
-    pk_modalidade = models.AutoField(primary_key=True)
-    modalidade = models.CharField(max_length=10, null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
-    updated_at = models.DateTimeField(auto_now=True, null=False)
+    pk_modalidade = models.AutoField(primary_key=True, verbose_name="ID")
+    modalidade = models.CharField(max_length=10, verbose_name="Modalidade")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -19,4 +19,5 @@ class Modalidade(models.Model):
     class Meta:
         managed = False
         db_table = '"hamilton"."modalidades"'
-
+        verbose_name = "Modalidade"
+        verbose_name_plural = "Modalidades"

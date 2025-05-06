@@ -3,11 +3,11 @@ from django.utils import timezone
 
 
 class Captacao(models.Model):
-    pk_captacao = models.AutoField(primary_key=True)
-    nome = models.TextField(null=False)
-    is_active = models.BooleanField(default=True, null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
-    updated_at = models.DateTimeField(auto_now=True, null=False)
+    pk_captacao = models.AutoField(primary_key=True, verbose_name="ID")
+    nome = models.CharField(max_length=255, verbose_name="Nome")
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -20,3 +20,5 @@ class Captacao(models.Model):
     class Meta:
         managed = False
         db_table = '"hamilton"."captacoes"'
+        verbose_name = "Captação"
+        verbose_name_plural = "Captações"

@@ -6,44 +6,46 @@ from paciente.models import Paciente
 
 
 class Consulta(models.Model):
-    CANCELAMENTO_CHOICES = [
-        ('T', 'Terapeuta'),
-        ('P', 'Paciente'),
-    ]
-    pk_consulta = models.AutoField(primary_key=True)
-    fk_decano = models.ForeignKey(Decano, on_delete=models.DO_NOTHING, db_column='fk_decano')
+    pk_consulta = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_decano = models.ForeignKey(
+        Decano, 
+        on_delete=models.CASCADE, 
+        db_column='fk_decano',
+        verbose_name="Decano"
+    )
     fk_terapeuta = models.ForeignKey(
-        Terapeuta,
-        on_delete=models.CASCADE,
-        db_column='fk_terapeuta'
+        Terapeuta, 
+        on_delete=models.CASCADE, 
+        db_column='fk_terapeuta',
+        verbose_name="Terapeuta"
     )
     fk_paciente = models.ForeignKey(
-        Paciente,
-        on_delete=models.CASCADE,
-        db_column='fk_paciente'
+        Paciente, 
+        on_delete=models.CASCADE, 
+        db_column='fk_paciente',
+        verbose_name="Paciente"
     )
-    dat_consulta = models.DateField(null=True, blank=True)
-    vlr_consulta = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(0)]
-    )
-    is_realizado = models.BooleanField()
-    is_pago = models.BooleanField(null=True, blank=True)
+    dat_consulta = models.DateField(verbose_name="Data da Consulta")
+    vlr_consulta = models.IntegerField(verbose_name="Valor da Consulta")
+    is_realizado = models.BooleanField(verbose_name="Realizada")
+    is_pago = models.BooleanField(null=True, blank=True, verbose_name="Paga")
     vlr_pago = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(0)]
+        max_digits=10, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        verbose_name="Valor Pago"
     )
     quem_cancelou = models.CharField(
-        max_length=1,
-        choices=CANCELAMENTO_CHOICES,
-        null=True,
-        blank=True
+        max_length=1, 
+        choices=[('T', 'Terapeuta'), ('P', 'Paciente')], 
+        null=True, 
+        blank=True,
+        verbose_name="Quem Cancelou"
     )
-    motivo_cancelamento = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    motivo_cancelamento = models.TextField(null=True, blank=True, verbose_name="Motivo do Cancelamento")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
         db_table = '"hamilton"."consultas"'
@@ -57,3 +59,4 @@ class Consulta(models.Model):
                 name='check_quem_cancelou_valid'
             ),
         ]
+    managed=False

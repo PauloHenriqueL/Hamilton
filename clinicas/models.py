@@ -3,10 +3,10 @@ from django.utils import timezone
 
 
 class Clinica(models.Model):
-    pk_clinica = models.AutoField(primary_key=True)
-    clinica = models.CharField(max_length=10, null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
-    updated_at = models.DateTimeField(auto_now=True, null=False)
+    pk_clinica = models.AutoField(primary_key=True, verbose_name="ID")
+    clinica = models.CharField(max_length=10, verbose_name="Clínica")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -19,3 +19,5 @@ class Clinica(models.Model):
     class Meta:
         managed = False
         db_table = '"hamilton"."clinicas"'
+        verbose_name = "Clínica"
+        verbose_name_plural = "Clínicas"
