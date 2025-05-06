@@ -4,17 +4,23 @@ from captacao.models import Captacao
 
 
 class Paciente(models.Model):
-    pk_paciente = models.AutoField(primary_key=True)
-    nome = models.TextField(null=False)
-    email = models.TextField(null=True, blank=True)
-    telefone = models.CharField(max_length=20, null=False)
-    contato_apoio = models.CharField(max_length=20, null=False)
-    dat_nascimento = models.DateField(null=False)
-    vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, null=False)
-    fk_captacao = models.ForeignKey(Captacao, on_delete=models.DO_NOTHING, db_column='fk_captacao')
-    is_active = models.BooleanField(default=True, null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
-    updated_at = models.DateTimeField(auto_now=True, null=False)
+    pk_paciente = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_captacao = models.ForeignKey(
+        Captacao, 
+        on_delete=models.CASCADE, 
+        db_column='fk_captacao',
+        verbose_name="Captação"
+    )
+    nome = models.CharField(max_length=255, verbose_name="Nome")
+    email = models.EmailField(blank=True, null=True, verbose_name="E-mail")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    contato_apoio = models.CharField(max_length=20, verbose_name="Contato de Apoio")
+    dat_nascimento = models.DateField(verbose_name="Data de Nascimento")
+    vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Sessão")
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -28,3 +34,5 @@ class Paciente(models.Model):
         managed = False
         ordering = ['nome']
         db_table = '"hamilton"."pacientes"'
+        verbose_name = "Paciente"
+        verbose_name_plural = "Pacientes"
