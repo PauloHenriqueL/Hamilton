@@ -1,5 +1,6 @@
 from django.db import models
 from captacao.models import Captacao
+from modalidades.models import Modalidade
 
 
 class Paciente(models.Model):
@@ -17,6 +18,13 @@ class Paciente(models.Model):
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Sessão")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    preferencias = models.TextField(verbose_name="Preferências do paciente sobre o terapeuta")
+    fk_modalidade = models.ForeignKey(
+        Modalidade, 
+        on_delete=models.CASCADE, 
+        db_column='fk_modalidade',
+        verbose_name="Modalidade"
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
@@ -24,7 +32,6 @@ class Paciente(models.Model):
         return self.nome
 
     class Meta:
-        managed = False
         ordering = ['nome']
         db_table = '"hamilton"."pacientes"'
         verbose_name = "Paciente"

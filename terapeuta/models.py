@@ -52,7 +52,6 @@ class Terapeuta(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
-        managed = False
         ordering = ['nome']
         db_table = '"hamilton"."terapeutas"'
         verbose_name = "Terapeuta"

@@ -19,7 +19,6 @@ class Decano(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        managed = False
         ordering = ['nome']
         db_table = '"hamilton"."decanos"'
         verbose_name = "Decano"

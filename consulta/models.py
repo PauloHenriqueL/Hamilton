@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from decano.models import Decano
 from terapeuta.models import Terapeuta
 from paciente.models import Paciente
@@ -59,4 +58,3 @@ class Consulta(models.Model):
                 name='check_quem_cancelou_valid'
             ),
         ]
-        managed=False

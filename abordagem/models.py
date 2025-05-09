@@ -17,7 +17,6 @@ class Abordagem(models.Model):
         return self.abordagem
 
     class Meta:
-        managed = False
         db_table = '"hamilton"."abordagens"'
         verbose_name = "Abordagem"
         verbose_name_plural = "Abordagens"
