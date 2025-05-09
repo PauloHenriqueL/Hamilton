@@ -59,4 +59,4 @@ class Consulta(models.Model):
                 name='check_quem_cancelou_valid'
             ),
         ]
-    managed=False
+        managed=False
