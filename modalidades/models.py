@@ -20,3 +20,5 @@ class Modalidade(models.Model):
         db_table = '"hamilton"."modalidades"'
         verbose_name = "Modalidade"
         verbose_name_plural = "Modalidades"
+
+# teste
