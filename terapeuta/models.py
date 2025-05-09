@@ -41,7 +41,7 @@ class Terapeuta(models.Model):
     )
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(unique=True, verbose_name="E-mail")
-    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone", help_text="INFORME APENAS NÚMEROS, não coloque +55 ou espaços")
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     sexo = models.CharField(
         max_length=1, 

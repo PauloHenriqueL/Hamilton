@@ -7,7 +7,7 @@ class Decano(models.Model):
     pk_decano = models.AutoField(primary_key=True, verbose_name="ID")
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(unique=True, verbose_name="E-mail")
-    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone", help_text="INFORME APENAS NÚMEROS, não coloque +55 ou espaços")
     dat_nascimento = models.DateField(verbose_name="Data de Nascimento")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")

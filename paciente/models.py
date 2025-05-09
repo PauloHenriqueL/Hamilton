@@ -12,7 +12,7 @@ class Paciente(models.Model):
     )
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(blank=True, null=True, verbose_name="E-mail")
-    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone", help_text="INFORME APENAS NÚMEROS, não coloque +55 ou espaços")
     contato_apoio = models.CharField(null=True, blank=True, max_length=20, verbose_name="Contato de Apoio")
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Sessão")
