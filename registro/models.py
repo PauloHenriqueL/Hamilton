@@ -44,6 +44,5 @@ class Registro(models.Model):
 
     class Meta:
         db_table = '"hamilton"."registro"'
-        managed=False
         verbose_name = "Registro"
         verbose_name_plural = "Registro Mensal"        

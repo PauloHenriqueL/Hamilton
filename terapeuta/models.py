@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import timezone
 from decano.models import Decano
 from abordagem.models import Abordagem
 from nucleo.models import Nucleo
