@@ -17,7 +17,6 @@ class Clinica(models.Model):
         return self.clinica
 
     class Meta:
-        managed = False
         db_table = '"hamilton"."clinicas"'
         verbose_name = "Clínica"
         verbose_name_plural = "Clínicas"
