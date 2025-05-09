@@ -24,7 +24,7 @@ class Registro(models.Model):
         db_column='fk_paciente',
         verbose_name="Paciente"
     )
-    qnt_consultas = models.IntegerField(verbose_name="Quantidade de consultas no mês")
+    qnt_consultas = models.IntegerField(verbose_name="Quantidade de consultas realizados no mês")
     vlr_consulta = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
