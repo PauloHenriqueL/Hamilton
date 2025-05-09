@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils import timezone
-import datetime
 from decano.models import Decano
 from abordagem.models import Abordagem
 from nucleo.models import Nucleo
@@ -43,20 +42,15 @@ class Terapeuta(models.Model):
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(unique=True, verbose_name="E-mail")
     telefone = models.CharField(max_length=20, verbose_name="Telefone")
-    dat_nascimento = models.DateField(verbose_name="Data de Nascimento")
+    dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     sexo = models.CharField(
         max_length=1, 
-        choices=[('M', 'Masculino'), ('F', 'Feminino')],
+        choices=[('M', 'Masculino'), ('F', 'Feminino'), ('O', 'Outro')],
         verbose_name="Sexo"
     )
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
-
-    def save(self, *args, **kwargs):
-        if self.pk:
-            self.updated_at = timezone.now()
-        super().save(*args, **kwargs)
 
     class Meta:
         managed = False
