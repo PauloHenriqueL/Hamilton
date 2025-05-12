@@ -13,7 +13,7 @@ class Paciente(models.Model):
     )
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(blank=True, null=True, verbose_name="E-mail")
-    telefone = models.CharField(max_length=20, verbose_name="Telefone do Paciente", help_text="INFORME APENAS NÚMEROS, não coloque +55 ou espaços")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone do Paciente", help_text="Exemplo: 31988553344 Não coloque +55/espaços/parênteses")
     Nome_contato_apoio = models.CharField(null=True, blank=True, max_length=200, verbose_name="Nome do Contato de Apoio")
     Parentesco_contato_apoio = models.CharField(null=True, blank=True, max_length=200, verbose_name="Parentesco do Contato de Apoio")
     contato_apoio = models.CharField(null=True, blank=True, max_length=20, verbose_name="Telefone do Contato de Apoio")
