@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     
+    'desistencia_alta',
     'lastkiss',
     'fistkiss',
     'registro',
