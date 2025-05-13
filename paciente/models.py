@@ -27,6 +27,7 @@ class Paciente(models.Model):
         return self.nome
 
     class Meta:
+        managed = False
         ordering = ['nome']
         db_table = '"hamilton"."pacientes"'
         verbose_name = "Paciente"
