@@ -5,8 +5,8 @@ from paciente.models import Paciente
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-class Firstkiss(models.Model):
-    pk_firstkiss = models.AutoField(primary_key=True, verbose_name="ID")
+class Lastkiss(models.Model):
+    pk_lastkiss = models.AutoField(primary_key=True, verbose_name="ID")
     fk_decano = models.ForeignKey(
         Decano, 
         on_delete=models.CASCADE, 
@@ -25,7 +25,6 @@ class Firstkiss(models.Model):
         db_column='fk_paciente',
         verbose_name="Paciente"
     )
-    dat_consulta = models.DateField(verbose_name="Data da primeira sessão")
 
     consentimento_paciente = models.CharField(
         null=True,
@@ -54,7 +53,7 @@ class Firstkiss(models.Model):
             MaxValueValidator(10, message="O valor máximo é 10")
         ]
     )
-    
+
     social = models.IntegerField(
         null=True,
         blank=True,
@@ -75,7 +74,7 @@ class Firstkiss(models.Model):
             MaxValueValidator(10, message="O valor máximo é 10")
         ]
     )
-    
+
     acolhimento = models.IntegerField(
         null=True,
         blank=True,
@@ -97,7 +96,7 @@ class Firstkiss(models.Model):
             MaxValueValidator(10, message="O valor máximo é 10")
         ]
     )
-    
+
     nivel_expectativa = models.IntegerField(
         null=True,
         blank=True,
@@ -116,13 +115,17 @@ class Firstkiss(models.Model):
         choices=[('S', 'Sim'), ('N', 'Não')]     
     )
 
+    recomendaria = models.CharField(
+        null=True,
+        blank=True,
+        verbose_name="Paciente recomendaria a Allos?",
+        choices=[('S', 'Sim'), ('N', 'Não')]     
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
-        managed = False
-        db_table = '"hamilton"."firstkiss"'
-        verbose_name = "Firstkiss"
-        verbose_name_plural = "Firstkiss"
-
-
+        db_table = '"hamilton"."lastkiss"'
+        verbose_name = "Lastkiss"
+        verbose_name_plural = "Lastkiss"
