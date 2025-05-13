@@ -15,7 +15,7 @@ class Paciente(models.Model):
     email = models.EmailField(blank=True, null=True, verbose_name="E-mail")
     telefone = models.CharField(max_length=20, verbose_name="Telefone do Paciente", help_text="Exemplo: 31988553344 Não coloque +55/espaços/parênteses")
     preferencia = models.CharField(null=True, blank=True, verbose_name="Preferencia")
-    modalidade = models.CharField(choices=[('Online', 'Online'), ('Presencial', 'Presencial')], verbose_name="Modalidade de atendimento")
+    modalidade = models.CharField(null=True, blank=True, choices=[('Online', 'Online'), ('Presencial', 'Presencial')], verbose_name="Modalidade de atendimento")
     contato_apoio = models.CharField(null=True, blank=True, max_length=20, verbose_name="Telefone do Contato de Apoio")
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Sessão")
