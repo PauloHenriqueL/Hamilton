@@ -38,7 +38,7 @@ class Terapeuta(models.Model):
         db_column='fk_modalidade',
         verbose_name="Modalidade"
     )
-    nome = models.CharField(max_length=255, verbose_name="Nome")
+    nome = models.CharField(max_length=255, verbose_name="Nome Completo")
     email = models.EmailField(unique=True, verbose_name="E-mail")
     telefone = models.CharField(max_length=20, verbose_name="Telefone", help_text="Exemplo: 31988553344 Não coloque +55/espaços/parênteses")
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
