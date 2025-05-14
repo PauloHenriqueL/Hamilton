@@ -12,11 +12,17 @@ class Desistencia_alta(models.Model):
         db_column='fk_terapeuta',
         verbose_name="Terapeuta"
     )
+   
     fk_paciente = models.ForeignKey(
         Paciente, 
         on_delete=models.CASCADE, 
         db_column='fk_paciente',
         verbose_name="Paciente"
+    )
+
+    momento = models.CharField(
+        verbose_name="Momento da saida?",
+        choices=[('Antes da primeira sessao', 'Antes da primeira sessao'), ('No primeiro atendimento', 'No primeiro atendimento'), ('Depois do primeiro atendimento', 'depois do primeiro atendimento')],
     )
 
     motivo = models.CharField(
