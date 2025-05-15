@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}
+ALLOS - Nova Avaliação
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .score-card {
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s;
+  }
+  
+  .score-select {
+    font-weight: bold;
+  }
+  
+  .score-label {
+    font-weight: 500;
+  }
+  
+  /* Cores para os scores */
+  .score-negative {
+    background-color: #ffebee;
+  }
+  
+  .score-neutral {
+    background-color: #f5f5f5;
+  }
+  
+  .score-positive {
+    background-color: #e8f5e9;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="display-4">{% if object %}Editar{% else %}Nova{% endif %} Avaliação</h3>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post" class="form" novalidate>
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger">
+          Por favor, corrija os erros abaixo.
+        </div>
+        {% endif %}
+        
+        <div class="row g-3 mb-4">
+          <!-- Avaliador -->
+          <div class="col-md-4 mb-3">
+            <label for="{{ form.fk_avaliador.id_for_label }}" class="form-label">{{ form.fk_avaliador.label }}</label>
+            {{ form.fk_avaliador }}
+            {% if form.fk_avaliador.errors %}
+              <div class="invalid-feedback d-block">{{ form.fk_avaliador.errors }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- Avaliado -->
+          <div class="col-md-4 mb-3">
+            <label for="{{ form.fk_avaliado.id_for_label }}" class="form-label">{{ form.fk_avaliado.label }}</label>
+            {{ form.fk_avaliado }}
+            {% if form.fk_avaliado.errors %}
+              <div class="invalid-feedback d-block">{{ form.fk_avaliado.errors }}</div>
+            {% endif %}
+          </div>
+          
+          <!-- Data da Avaliação -->
+          <div class="col-md-4 mb-3">
+            <label for="{{ form.dat_avaliacao.id_for_label }}" class="form-label">{{ form.dat_avaliacao.label }}</label>
+            {{ form.dat_avaliacao }}
+            {% if form.dat_avaliacao.help_text %}
+              <div class="form-text">{{ form.dat_avaliacao.help_text }}</div>
+            {% endif %}
+            {% if form.dat_avaliacao.errors %}
+              <div class="invalid-feedback d-block">{{ form.dat_avaliacao.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <h4 class="mb-3">Critérios de Avaliação</h4>
+        
+        <div class="row">
+          <!-- Cada critério de avaliação -->
+          {% for field in form %}
+            {% if field.name not in 'fk_avaliador,fk_avaliado,dat_avaliacao' %}
+            <div class="col-md-6 mb-3">
+              <div class="card score-card">
+                <div class="card-body">
+                  <label for="{{ field.id_for_label }}" class="score-label">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.errors %}
+                    <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+          <a href="{% url 'avaliacao-list' %}" class="btn btn-secondary ms-2">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Função para atualizar cor do card com base no valor selecionado
+    function updateScoreCardColor(select) {
+      const card = select.closest('.score-card');
+      const value = parseInt(select.value);
+      
+      // Remove classes existentes
+      card.classList.remove('score-negative', 'score-neutral', 'score-positive');
+      
+      // Adiciona classe com base no valor
+      if (value < 0) {
+        card.classList.add('score-negative');
+      } else if (value === 0) {
+        card.classList.add('score-neutral');
+      } else {
+        card.classList.add('score-positive');
+      }
+    }
+    
+    // Adiciona evento change para todos os selects de score
+    const scoreSelects = document.querySelectorAll('.score-select');
+    scoreSelects.forEach(select => {
+      // Inicializa cores
+      updateScoreCardColor(select);
+      
+      // Adiciona evento para atualizar cores quando o valor mudar
+      select.addEventListener('change', function() {
+        updateScoreCardColor(this);
+      });
+    });
+  });
+</script>
+{% endblock %}

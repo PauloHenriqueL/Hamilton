@@ -11,7 +11,7 @@ class Paciente(models.Model):
         db_column='fk_captacao',
         verbose_name="Captação"
     )
-    nome = models.CharField(max_length=255, verbose_name="Nome")
+    nome = models.CharField(max_length=255, verbose_name="Nome Completo")
     email = models.EmailField(blank=True, null=True, verbose_name="E-mail")
     telefone = models.CharField(max_length=20, verbose_name="Telefone do Paciente", help_text="Exemplo: 31988553344 Não coloque +55/espaços/parênteses")
     preferencia = models.CharField(null=True, blank=True, verbose_name="Preferencias",  help_text="Descreva as preferencias do paciente")

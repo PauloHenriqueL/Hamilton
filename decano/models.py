@@ -5,7 +5,7 @@ from django.utils import timezone
 
 class Decano(models.Model):
     pk_decano = models.AutoField(primary_key=True, verbose_name="ID")
-    nome = models.CharField(max_length=255, verbose_name="Nome")
+    nome = models.CharField(max_length=255, verbose_name="Nome Completo")
     email = models.EmailField(unique=True, verbose_name="E-mail")
     telefone = models.CharField(max_length=20, verbose_name="Telefone", help_text="Exemplo: 31988553344 Não coloque +55/espaços/parênteses")
     dat_nascimento = models.DateField(verbose_name="Data de Nascimento")

@@ -21,6 +21,8 @@ class Desistencia_alta(models.Model):
     )
 
     momento = models.CharField(
+        null=True,
+        blank=True,
         verbose_name="Momento da saida?",
         choices=[('Antes da primeira sessao', 'Antes da primeira sessao'), ('No primeiro atendimento', 'No primeiro atendimento'), ('Depois do primeiro atendimento', 'depois do primeiro atendimento')],
     )

@@ -31,7 +31,9 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'rest_framework_simplejwt',
-    
+
+    'avalicao',
+    'associado',
     'desistencia_alta',
     'lastkiss',
     'fistkiss',
@@ -46,9 +48,16 @@ INSTALLED_APPS = [
     'nucleo',
     'terapeuta',
     'prefeidades',
-    'authentication',
-    
+    'authentication',  
 ]
+
+
+
+LOGIN_URL = 'login'
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

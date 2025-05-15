@@ -1,9 +1,16 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from . import views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('', views.home, name='home'),
+
 
     path('api/v1/', include('abordagem.urls')),
     path('api/v1/', include('authentication.urls')),
@@ -16,4 +23,6 @@ urlpatterns = [
     path('api/v1/', include('paciente.urls')),
     path('api/v1/', include('prefeidades.urls')),
     path('api/v1/', include('terapeuta.urls')),
+    path('api/v1/', include('avalicao.urls')),
+    path('api/v1/', include('associado.urls')),
 ]
