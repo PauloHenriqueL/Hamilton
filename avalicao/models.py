@@ -66,15 +66,29 @@ class Avaliacao(models.Model):
         return f"Availiallos do {self.fk_avaliado} pelo {self.fk_avaliador}"
     
     def get_avg_score(self):
-        """Calcula a pontuação média de todos os critérios de avaliação"""
-        scores = [
-            self.estagio_mudanca, self.estrutura, self.encerramento, 
-            self.acolhimento, self.seguranca_terapeuta, self.seguranca_metodo,
-            self.aprofundar, self.hipoteses, self.interpretativa,
-            self.frase_timing, self.corpo_setting, self.insight_potencia
+        """
+        Calcula a pontuação média de todos os critérios de avaliação
+        """
+        fields = [
+            self.estagio_mudanca, 
+            self.estrutura, 
+            self.encerramento,
+            self.acolhimento, 
+            self.seguranca_terapeuta, 
+            self.seguranca_metodo,
+            self.aprofundar, 
+            self.hipoteses, 
+            self.interpretativa,
+            self.frase_timing, 
+            self.corpo_setting, 
+            self.insight_potencia
         ]
-        return sum(scores) / len(scores)
-    
+        # Filtra valores None antes de calcular a média
+        valid_fields = [f for f in fields if f is not None]
+        if not valid_fields:
+            return 0
+        return sum(valid_fields) / len(valid_fields)
+
     class Meta:
         db_table = '"staff"."avaliacao"'
         verbose_name = 'Availiallos'

@@ -35,6 +35,15 @@ ALLOS - AvaliAllos
   {% endif %}
 </div>
 
+<!-- Debug Information - Remover após debug -->
+<div class="alert alert-info mb-3">
+  <p>Total de avaliações carregadas: {{ avaliacoes|length }}</p>
+  <p>Filtros ativos: 
+    {% if request.GET.avaliador %}Avaliador ID: {{ request.GET.avaliador }}{% else %}Nenhum filtro de avaliador{% endif %} | 
+    {% if request.GET.avaliado %}Avaliado ID: {{ request.GET.avaliado }}{% else %}Nenhum filtro de avaliado{% endif %}
+  </p>
+</div>
+
 <div class="table-responsive">
   <table class="table table-striped table-bordered">
     <thead class="table-dark">
@@ -59,31 +68,15 @@ ALLOS - AvaliAllos
         <td>{{ avaliacao.fk_avaliado }}</td>
         <td class="text-center">{{ avaliacao.dat_avaliacao|date:"d/m/Y" }}</td>
         <td class="text-center">
-          <!-- Verificação para garantir que o método existe -->
-          {% if avaliacao.get_avg_score %}
-            {% with score=avaliacao.get_avg_score %}
-              {% if score < 0 %}
-                <span class="badge bg-danger fs-6 p-2">{{ score|floatformat:1 }}</span>
-              {% elif score == 0 %}
-                <span class="badge bg-secondary fs-6 p-2">{{ score|floatformat:1 }}</span>
-              {% else %}
-                <span class="badge bg-success fs-6 p-2">+{{ score|floatformat:1 }}</span>
-              {% endif %}
-            {% endwith %}
-          {% else %}
-            <!-- Cálculo direto se o método não existir -->
-            {% with fields=avaliacao.estagio_mudanca|add:avaliacao.estrutura|add:avaliacao.encerramento|add:avaliacao.acolhimento|add:avaliacao.seguranca_terapeuta|add:avaliacao.seguranca_metodo|add:avaliacao.aprofundar|add:avaliacao.hipoteses|add:avaliacao.interpretativa|add:avaliacao.frase_timing|add:avaliacao.corpo_setting|add:avaliacao.insight_potencia %}
-              {% with score=fields|divisibleby:12 %}
-                {% if score < 0 %}
-                  <span class="badge bg-danger fs-6 p-2">{{ score|floatformat:1 }}</span>
-                {% elif score == 0 %}
-                  <span class="badge bg-secondary fs-6 p-2">{{ score|floatformat:1 }}</span>
-                {% else %}
-                  <span class="badge bg-success fs-6 p-2">+{{ score|floatformat:1 }}</span>
-                {% endif %}
-              {% endwith %}
-            {% endwith %}
-          {% endif %}
+          {% with score=avaliacao.get_avg_score %}
+            {% if score < 0 %}
+              <span class="badge bg-danger fs-6 p-2">{{ score|floatformat:1 }}</span>
+            {% elif score == 0 %}
+              <span class="badge bg-secondary fs-6 p-2">{{ score|floatformat:1 }}</span>
+            {% else %}
+              <span class="badge bg-success fs-6 p-2">+{{ score|floatformat:1 }}</span>
+            {% endif %}
+          {% endwith %}
           
           <!-- Exibição de pontuações individuais -->
           <div class="d-flex justify-content-center gap-1 mt-1">
