@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h3 class="display-4">Detalhes do Avaliacao</h3>
+
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ object.nome }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>E-mail:</strong> {{ object.email }}</p>
+            <p><strong>Telefone:</strong> {{ object.telefone }}</p>
+            <p><strong>CPF:</strong> {{ object.cpf }}</p>
+            <p><strong>Setor:</strong> {{ object.fk_setor }}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Data de Nascimento:</strong> {% if object.dat_nascimento %}{{ object.dat_nascimento|date:"d/m/Y" }}{% else %}Não informado{% endif %}</p>
+            <p><strong>Endereço:</strong> {{ object.endereco }}</p>
+            <p><strong>Status:</strong> {% if object.is_active %}<span class="badge bg-success">Ativo</span>{% else %}<span class="badge bg-danger">Inativo</span>{% endif %}</p>
+            <p><strong>Data de Cadastro:</strong> {{ object.created_at|date:"d/m/Y H:i" }}</p>
+          </div>
+        </div>
+
+        {% if object.dif %}
+        <div class="mt-3">
+          <h6>Diferenciais:</h6>
+          <p>{{ object.dif|linebreaks }}</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+          <a href="{% url 'avaliacao-update' object.pk_avaliacao %}" class="btn btn-primary">Editar</a>
+          <a href="{% url 'avaliacao-delete' object.pk_avaliacao %}" class="btn btn-danger">Deletar</a>
+          <a href="{% url 'avaliacao-list' %}" class="btn btn-secondary">Voltar para a Lista</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
