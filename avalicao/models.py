@@ -129,6 +129,7 @@ class Avalioracao(models.Model):
         return f"Availição do {self.fk_avaliado} pelo {self.fk_avaliador}"
     
     class Meta:
+        managed=False
         db_table = '"staff"."avalioracao"'
         verbose_name = 'Avaliação de Comunicão Oral'
         verbose_name_plural = 'Availiações orais'

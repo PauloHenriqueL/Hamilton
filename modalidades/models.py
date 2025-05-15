@@ -17,6 +17,7 @@ class Modalidade(models.Model):
         return self.modalidade
     
     class Meta:
+        managed=False
         db_table = '"hamilton"."modalidades"'
         verbose_name = "Modalidade"
         verbose_name_plural = "Modalidades"

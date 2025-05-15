@@ -17,6 +17,7 @@ class Nucleo(models.Model):
         return self.nucleo
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."nucleos"'
         verbose_name = "Núcleo"
         verbose_name_plural = "Núcleos"

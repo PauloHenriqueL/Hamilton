@@ -126,6 +126,7 @@ class Lastkiss(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."lastkiss"'
         verbose_name = "Lastkiss"
         verbose_name_plural = "Lastkiss"

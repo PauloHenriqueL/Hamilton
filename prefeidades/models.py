@@ -26,6 +26,7 @@ class Prefeidade(models.Model):
 
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."prefeidades"'
         constraints = [
             models.UniqueConstraint(

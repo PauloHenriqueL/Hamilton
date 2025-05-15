@@ -7,14 +7,21 @@ class AssociadoForm(forms.ModelForm):
     class Meta:
         model = models.Associado
         fields = [
-            'nome', 
+            'nome',
+            'faculdade', 
             'email', 
-            'telefone', 
+            'telefone',
+            'telefone_eme',
+            'fk_nucleo',  
             'cpf', 
-            'fk_setor', 
+            'fk_setores',
+            'sexo', 
             'dat_nascimento', 
-            'endereco', 
-            'dif', 
+            'endereco',
+            'rem', 
+            'dif',
+            'rep',
+            'is_pcd', 
             'is_active'
         ]
         widgets = {
@@ -22,10 +29,14 @@ class AssociadoForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control'}),
             'cpf': forms.TextInput(attrs={'class': 'form-control'}),
-            'fk_setor': forms.Select(attrs={'class': 'form-control'}),
+            'fk_setores': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'sexo': forms.Select(attrs={'class': 'form-control'}),
             'dat_nascimento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
+            'rem': forms.NumberInput(attrs={'class': 'form-control'}),
             'dif': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'dif': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_pcd': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
         

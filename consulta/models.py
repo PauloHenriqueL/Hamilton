@@ -47,6 +47,7 @@ class Consulta(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."consultas"'
         constraints = [
             models.CheckConstraint(
