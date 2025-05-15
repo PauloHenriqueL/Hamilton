@@ -46,6 +46,7 @@ class Desistencia_alta(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."desistencia_alta"'
         verbose_name = "Desistencia/Alta"
         verbose_name_plural = "Desistencia/Alta"

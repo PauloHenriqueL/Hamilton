@@ -43,6 +43,7 @@ class Registro(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."registro"'
         verbose_name = "Registro"
         verbose_name_plural = "Registro Mensal"        

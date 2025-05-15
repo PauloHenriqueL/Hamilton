@@ -18,6 +18,7 @@ class Captacao(models.Model):
         return self.nome
 
     class Meta:
+        managed=False
         db_table = '"hamilton"."captacoes"'
         verbose_name = "Captação"
         verbose_name_plural = "Captações"

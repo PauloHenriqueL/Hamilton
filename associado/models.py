@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator, MinLengthValidator
-
+from nucleo.models import Nucleo
 
 
 apenas_numeros = RegexValidator(
@@ -61,6 +61,7 @@ class Setor(models.Model):
 class Associado(models.Model):
     pk_associado = models.AutoField(primary_key=True, verbose_name="ID")
     nome = models.CharField(max_length=255, verbose_name="Nome completo")
+    faculdade = models.CharField(null=True,blank=True,max_length=255, verbose_name="Faculdade")
     email = models.EmailField(unique=True, verbose_name="E-mail")
     telefone = models.CharField(
         max_length=20, 
@@ -71,7 +72,28 @@ class Associado(models.Model):
             MinLengthValidator(10, "Telefone deve ter no mínimo 10 dígitos."),
         ]
     )
+    telefone_eme = models.CharField(
+        null=True,
+        blank=True,
+        max_length=20, 
+        verbose_name="Telefone de emergência", 
+        help_text="Exemplo: 31988553344 Não coloque +55/espaços/parênteses",
+        validators=[
+            apenas_numeros,
+            MinLengthValidator(10, "Telefone deve ter no mínimo 10 dígitos."),
+        ]
+    )
+    fk_nucleo = models.ForeignKey(
+        Nucleo,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE, 
+        db_column='fk_nucleo',
+        verbose_name="Núcleo"
+    )
     cpf = models.CharField(
+        null=True,
+        blank=True,
         max_length=11, 
         verbose_name="CPF", 
         help_text="Exemplo: 12345678901 Não coloque pontos ou traços",
@@ -81,21 +103,35 @@ class Associado(models.Model):
             validate_cpf,
         ]
     )
-    fk_setor = models.ForeignKey(Setor, on_delete=models.CASCADE, related_name='Setor')
+    fk_setores = models.ManyToManyField(
+        Setor, 
+        through='AssociadoSetor',
+        related_name='associados', 
+        verbose_name="Setores"
+    )
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
-    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    sexo = models.CharField(
+        max_length=1, 
+        choices=[('M', 'Masculino'), ('F', 'Feminino'), ('O', 'Outro')],
+        verbose_name="Sexo"
+    )
     endereco = models.CharField(
         max_length=255,
         verbose_name="Endereço",
-        help_text="Formato: Cidade, Rua, N° (Exemplo: Belo Horizonte, Rua Mayrink, 44)",
+        help_text="Formato: Estado, Cidade (Exemplo: MG, Belo Horizonte)",
         validators=[
             RegexValidator(
-                regex=r'^.+,\s*.+,\s*\d+$',
-                message="O endereço deve seguir o formato: Cidade, Rua, Número (Exemplo: Belo Horizonte, Rua Mayrink, 44)"
+                regex=r'^[A-Z]{2},\s*[A-Za-zÀ-ÿ\s]+$',
+                message="O endereço deve seguir o formato: Estado, Cidade (Exemplo: MG, Belo Horizonte)"
             )
         ]
     )
+    rem = models.DecimalField(null=True, blank=True, max_digits=10, decimal_places=2, verbose_name="Remuneração")
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    is_pcd = models.BooleanField(default=True, verbose_name="PCD")
     dif = models.TextField(null=True, blank=True, verbose_name="Diferencias")
+    rep = models.TextField(null=True, blank=True, verbose_name="Responsabilidades")
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
@@ -107,3 +143,21 @@ class Associado(models.Model):
     
     def __str__(self):
         return self.nome
+
+class AssociadoSetor(models.Model):
+    associado = models.ForeignKey(
+        Associado,
+        on_delete=models.CASCADE,
+        db_column='associado_id'
+    )
+    setor = models.ForeignKey(
+        Setor,
+        on_delete=models.CASCADE,
+        db_column='setor_id'
+    )
+    
+    class Meta:
+        db_table = '"staff"."associado_setor"'
+        unique_together = (('associado', 'setor'),)
+        verbose_name = "Associação Associado-Setor"
+        verbose_name_plural = "Associações Associado-Setor"
