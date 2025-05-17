@@ -1,24 +1,20 @@
-
 from pathlib import Path
 import os
-from datetime import timedelta
-import dj_database_url
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-
+from datetime import timedelta
 
 
 load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+SECRET_KEY = 'django-insecure-b_@c+-&wf@fgz7&170hixy&hp&k)zq4y62r9r3)ja%^0u@7gkq'
+
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
-
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 INSTALLED_APPS = [
@@ -28,36 +24,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
     'rest_framework',
     'rest_framework_simplejwt',
-
-    'avalicao',
-    'associado',
-    'desistencia_alta',
-    'lastkiss',
-    'fistkiss',
-    'registro',
-    'abordagem',
-    'captacao',
-    'clinicas',
-    'consulta',
-    'modalidades',
-    'decano',
-    'paciente',
-    'nucleo',
-    'terapeuta',
-    'prefeidades',
-    'authentication',  
+    'principais',
+    'acessorios',
 ]
 
-
-
 LOGIN_URL = 'login'
-
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/api/v1/consulta/list/'
 LOGOUT_REDIRECT_URL = '/login/'
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -90,7 +65,9 @@ TEMPLATES = [
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 WSGI_APPLICATION = 'app.wsgi.application'
-tmpPostgres = urlparse(os.environ.get("DATABASE_URL"))
+
+
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {
     'default': {
@@ -102,6 +79,10 @@ DATABASES = {
         'PORT': 5432,
     }
 }
+
+
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -118,6 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
 LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'America/Sao_Paulo'
@@ -125,7 +107,6 @@ TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 
 USE_TZ = True
-
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
