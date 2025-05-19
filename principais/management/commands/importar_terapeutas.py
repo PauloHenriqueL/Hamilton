@@ -20,8 +20,8 @@ class Command(BaseCommand):
             return
             
         try:
-            # Carregar o CSV
-            df = pd.read_csv(arquivo_csv, encoding='utf-8')
+            # Carregar o CSV com encoding CP1252 (Windows Latin-1)
+            df = pd.read_csv(arquivo_csv, encoding='cp1252')
             self.stdout.write(self.style.SUCCESS(f'Arquivo carregado com sucesso. {len(df)} registros encontrados.'))
             
             # Verificar ou criar o grupo de Terapeutas
