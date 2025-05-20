@@ -31,9 +31,7 @@ ALLOS - Consultas
     <thead class="thead-dark">
       <tr>
         <th>ID</th>
-        <th>Decano</th>
         <th>Terapeuta</th>
-        <th>Paciente</th>
         <th>Foi Pago?</th>
         <th>Foi Realizado?</th>
         <th>Data</th>
@@ -48,9 +46,7 @@ ALLOS - Consultas
             {{ consulta.pk_consulta }}
           </a>
         </td>
-        <td>{{ consulta.fk_decano }}</td>
         <td>{{ consulta.fk_terapeuta }}</td>
-        <td>{{ consulta.fk_paciente }}</td>
         <td>
           {% if consulta.is_pago %}
             <span class="badge bg-success">Pago</span>
