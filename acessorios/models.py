@@ -1,5 +1,8 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Captacao(models.Model):
@@ -129,3 +132,32 @@ class Prefeidade(models.Model):
         verbose_name = "Preferência de Idade"
         verbose_name_plural = "Preferências de Idade"
 
+
+class TerapeutaUser(models.Model):
+    usuario = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        verbose_name="Usuário"
+    )
+    terapeuta = models.OneToOneField(
+        'principais.Terapeuta',
+        on_delete=models.CASCADE, 
+        db_column='fk_terapeuta',
+        verbose_name="Terapeuta"
+    )
+    
+    class Meta:
+        managed = False  # Manter se você não quer que o Django gerencie essa tabela
+        db_table = '"hamilton"."terapeuta_usuarios"'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['terapeuta'], 
+                name='unique_terapeuta_user'
+            )
+        ]
+        verbose_name = "Usuário de Terapeuta"
+        verbose_name_plural = "Usuários de Terapeutas"
+        
+    def __str__(self):
+        return f"{self.usuario.username} - {self.terapeuta.nome if self.terapeuta else 'Sem terapeuta'}"

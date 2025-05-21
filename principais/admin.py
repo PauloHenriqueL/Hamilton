@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import Sum, Count
-from .models import Decano, Paciente, Terapeuta, Consulta
+from .models import Decano, Paciente, Terapeuta, Consulta, Firstkiss, Lastkiss, Altadesistencia
 from django.utils import timezone
 from datetime import datetime, timedelta
 
@@ -255,7 +255,7 @@ class ConsultaDataFilter(admin.SimpleListFilter):
 
 @admin.register(Consulta)
 class ConsultaAdmin(admin.ModelAdmin):
-    list_display = ('data', 'paciente_nome', 'terapeuta_nome', 'vlr_consulta', 'status_realizacao', 'status_pagamento', 'vlr_pago', 'created_at')
+    list_display = ('dat_consulta', 'paciente_nome', 'terapeuta_nome', 'vlr_consulta', 'status_realizacao', 'status_pagamento', 'vlr_pago', 'created_at')
     list_filter = (ConsultaDataFilter, 'is_realizado', 'is_pago', 'fk_terapeuta', 'fk_paciente')
     search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
     readonly_fields = ('created_at', 'updated_at')
@@ -263,7 +263,7 @@ class ConsultaAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             ('Informações Básicas', {
-                'fields': ('fk_decano', 'fk_terapeuta', 'fk_paciente', 'data')
+                'fields': ('fk_terapeuta', 'fk_paciente', 'dat_consulta')
             }),
             ('Valores', {
                 'fields': ('vlr_consulta', 'vlr_pago')
@@ -284,7 +284,7 @@ class ConsultaAdmin(admin.ModelAdmin):
         
         return fieldsets
     
-    date_hierarchy = 'data'
+    date_hierarchy = 'dat_consulta'
     list_per_page = 30
     
     def paciente_nome(self, obj):
@@ -332,18 +332,178 @@ class ConsultaAdmin(admin.ModelAdmin):
         return ()  # Em modo de criação, nenhum campo somente-leitura
 
 
-# Adicionar Dashboard Administrativo
 class DashboardAdmin(admin.AdminSite):
     site_header = 'ALLOS Consultório - Administração'
     site_title = 'ALLOS Admin'
     index_title = 'Painel Administrativo'
 
-# Substituir o admin padrão
-# admin_site = DashboardAdmin(name='allos_admin')
-# admin_site.register(Decano, DecanoAdmin)
-# admin_site.register(Paciente, PacienteAdmin)
-# admin_site.register(Terapeuta, TerapeutaAdmin)
-# admin_site.register(Consulta, ConsultaAdmin)
 
-# Você pode descomentar o código acima e substituir o admin.site em urls.py
-# para um dashboard personalizado caso deseje
+class FirstkissDataFilter(admin.SimpleListFilter):
+    title = 'Período'
+    parameter_name = 'periodo'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('hoje', 'Hoje'),
+            ('semana', 'Esta Semana'),
+            ('mes', 'Este Mês'),
+        )
+
+    def queryset(self, request, queryset):
+        hoje = timezone.now().date()
+        
+        if self.value() == 'hoje':
+            return queryset.filter(data=hoje)
+        if self.value() == 'semana':
+            inicio_semana = hoje - timedelta(days=hoje.weekday())
+            fim_semana = inicio_semana + timedelta(days=6)
+            return queryset.filter(data__range=[inicio_semana, fim_semana])
+        if self.value() == 'mes':
+            inicio_mes = hoje.replace(day=1)
+            if hoje.month == 12:
+                fim_mes = hoje.replace(year=hoje.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                fim_mes = hoje.replace(month=hoje.month + 1, day=1) - timedelta(days=1)
+            return queryset.filter(data__range=[inicio_mes, fim_mes])
+
+
+@admin.register(Firstkiss)
+class FirstkissAdmin(admin.ModelAdmin):
+    list_display = ('dat_consulta', 'paciente_nome', 'terapeuta_nome','created_at')
+    list_filter = (FirstkissDataFilter, 'fk_terapeuta', 'fk_paciente')
+    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Informações Básicas', {
+                'fields': ('fk_terapeuta', 'fk_paciente', 'dat_consulta')
+            }),
+        ]
+        
+        # Adiciona datas do sistema apenas no modo de edição
+        if obj:
+            fieldsets.append(
+                ('Datas do Sistema', {
+                    'fields': ('created_at', 'updated_at'),
+                    'classes': ('collapse',)
+                })
+            )
+        
+        return fieldsets
+    
+    date_hierarchy = 'dat_consulta'
+    list_per_page = 30
+    
+    def paciente_nome(self, obj):
+        if obj and obj.fk_paciente:
+            return obj.fk_paciente.nome
+        return '-'
+    paciente_nome.short_description = 'Paciente'
+    paciente_nome.admin_order_field = 'fk_paciente__nome'
+    
+    def terapeuta_nome(self, obj):
+        if obj and obj.fk_terapeuta:
+            return obj.fk_terapeuta.nome
+        return '-'
+    terapeuta_nome.short_description = 'Terapeuta'
+    terapeuta_nome.admin_order_field = 'fk_terapeuta__nome'
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Em modo de edição
+            return self.readonly_fields
+        return ()  # Em modo de criação, nenhum campo somente-leitura
+
+
+@admin.register(Altadesistencia)
+class AltadesistenciaAdmin(admin.ModelAdmin):
+    list_display = ('paciente_nome', 'terapeuta_nome','created_at')
+    list_filter = ('fk_terapeuta', 'fk_paciente')
+    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Informações Básicas', {
+                'fields': ('fk_terapeuta', 'fk_paciente')
+            }),
+        ]
+        
+        # Adiciona datas do sistema apenas no modo de edição
+        if obj:
+            fieldsets.append(
+                ('Datas do Sistema', {
+                    'fields': ('created_at', 'updated_at'),
+                    'classes': ('collapse',)
+                })
+            )
+        
+        return fieldsets
+
+    list_per_page = 30
+    
+    def paciente_nome(self, obj):
+        if obj and obj.fk_paciente:
+            return obj.fk_paciente.nome
+        return '-'
+    paciente_nome.short_description = 'Paciente'
+    paciente_nome.admin_order_field = 'fk_paciente__nome'
+    
+    def terapeuta_nome(self, obj):
+        if obj and obj.fk_terapeuta:
+            return obj.fk_terapeuta.nome
+        return '-'
+    terapeuta_nome.short_description = 'Terapeuta'
+    terapeuta_nome.admin_order_field = 'fk_terapeuta__nome'
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Em modo de edição
+            return self.readonly_fields
+        return ()  # Em modo de criação, nenhum campo somente-leitura
+
+
+@admin.register(Lastkiss)
+class LastkissAdmin(admin.ModelAdmin):
+    list_display = ('paciente_nome', 'terapeuta_nome','created_at')
+    list_filter = ('fk_terapeuta', 'fk_paciente')
+    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Informações Básicas', {
+                'fields': ('fk_terapeuta', 'fk_paciente')
+            }),
+        ]
+        
+        # Adiciona datas do sistema apenas no modo de edição
+        if obj:
+            fieldsets.append(
+                ('Datas do Sistema', {
+                    'fields': ('created_at', 'updated_at'),
+                    'classes': ('collapse',)
+                })
+            )
+        
+        return fieldsets
+    
+    list_per_page = 30
+    
+    def paciente_nome(self, obj):
+        if obj and obj.fk_paciente:
+            return obj.fk_paciente.nome
+        return '-'
+    paciente_nome.short_description = 'Paciente'
+    paciente_nome.admin_order_field = 'fk_paciente__nome'
+    
+    def terapeuta_nome(self, obj):
+        if obj and obj.fk_terapeuta:
+            return obj.fk_terapeuta.nome
+        return '-'
+    terapeuta_nome.short_description = 'Terapeuta'
+    terapeuta_nome.admin_order_field = 'fk_terapeuta__nome'
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Em modo de edição
+            return self.readonly_fields
+        return ()  # Em modo de criação, nenhum campo somente-leitura
