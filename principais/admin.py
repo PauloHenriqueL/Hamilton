@@ -1,9 +1,12 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db.models import Sum, Count
 from .models import Decano, Paciente, Terapeuta, Consulta, Firstkiss, Lastkiss, Altadesistencia
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.db.models import Sum, Count, Q, Avg
+from .models import Decano, Paciente, Terapeuta, Consulta, Firstkiss, Lastkiss, Altadesistencia
+
+
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = 'Status'
@@ -68,16 +71,11 @@ class DecanoAdmin(admin.ModelAdmin):
 class PacienteAdmin(admin.ModelAdmin):
     list_display = (
         'nome', 'telefone', 'email', 'vlr_sessao_formatado', 
-        'status_ativo', 'total_consultas', 'consultas_realizadas',
-        'data_ultima_consulta', 'data_primeira_consulta', 'created_at'
+        'status_ativo', 'total_consultas', 'created_at'
     )
 
     search_fields = ('nome', 'email', 'telefone', 'nome_contato_apoio')
-    readonly_fields = (
-        'created_at', 'updated_at', 'total_consultas', 'consultas_realizadas',
-        'data_ultima_consulta', 'data_primeira_consulta', 'valor_total_pago',
-        'valor_total_pendente', 'media_valor_consulta'
-    )
+
     
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
@@ -92,24 +90,6 @@ class PacienteAdmin(admin.ModelAdmin):
                 'fields': ('fk_clinica', 'fk_captacao', 'vlr_sessao', 'is_active')
             }),
         ]
-        
-        if obj:
-            fieldsets.append(
-                ('Estatísticas Detalhadas', {
-                    'fields': (
-                        'total_consultas', 'consultas_realizadas', 
-                        'data_primeira_consulta', 'data_ultima_consulta',
-                        'valor_total_pago', 'valor_total_pendente', 'media_valor_consulta'
-                    ),
-                    'classes': ('collapse',)
-                })
-            )
-            fieldsets.append(
-                ('Datas do Sistema', {
-                    'fields': ('created_at', 'updated_at'),
-                    'classes': ('collapse',)
-                })
-            )
         
         return fieldsets
     
@@ -136,37 +116,6 @@ class PacienteAdmin(admin.ModelAdmin):
             return Consulta.objects.filter(fk_paciente=obj).count()
         return 0
     total_consultas.short_description = 'Total Consultas'
-    
-    def consultas_realizadas(self, obj):
-        if obj and obj.pk:
-            realizadas = Consulta.objects.filter(fk_paciente=obj, is_realizado=True).count()
-            total = Consulta.objects.filter(fk_paciente=obj).count()
-            if total > 0:
-                percentual = (realizadas / total) * 100
-                color = 'green' if percentual >= 80 else 'orange' if percentual >= 60 else 'red'
-                return format_html(
-                    '<span style="color:{};">{}/{} ({}%)</span>',
-                    color, realizadas, total, int(percentual)
-                )
-            return '0/0'
-        return '0/0'
-    consultas_realizadas.short_description = 'Realizadas'
-    
-    def data_ultima_consulta(self, obj):
-        if obj and obj.pk:
-            ultima = Consulta.objects.filter(fk_paciente=obj).order_by('-dat_consulta').first()
-            if ultima and ultima.dat_consulta:
-                return ultima.dat_consulta.strftime('%d/%m/%Y')
-        return '-'
-    data_ultima_consulta.short_description = 'Última Consulta'
-    
-    def data_primeira_consulta(self, obj):
-        if obj and obj.pk:
-            primeira = Consulta.objects.filter(fk_paciente=obj).order_by('dat_consulta').first()
-            if primeira and primeira.dat_consulta:
-                return primeira.dat_consulta.strftime('%d/%m/%Y')
-        return '-'
-    data_primeira_consulta.short_description = 'Primeira Consulta'
     
     def valor_total_pago(self, obj):
         if obj and obj.pk:
@@ -198,10 +147,6 @@ class PacienteAdmin(admin.ModelAdmin):
         self.message_user(request, f'{updated} paciente(s) desativado(s) com sucesso.')
     desativar_pacientes.short_description = "Desativar pacientes selecionados"
     
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields
-        return ('created_at', 'updated_at')
 
 
 @admin.register(Terapeuta)
@@ -216,11 +161,7 @@ class TerapeutaAdmin(admin.ModelAdmin):
         'fk_modalidade', 'sexo', 'fk_decano', 'created_at'
     )
     search_fields = ('nome', 'email', 'telefone', 'faculdade')
-    readonly_fields = (
-        'created_at', 'updated_at', 'total_pacientes', 'total_consultas', 
-        'taxa_realizacao', 'receita_total', 'receita_pendente', 
-        'media_consultas_por_paciente', 'paciente_mais_frequente'
-    )
+
     
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
@@ -365,11 +306,7 @@ class TerapeutaAdmin(admin.ModelAdmin):
         updated = queryset.update(is_active=False)
         self.message_user(request, f'{updated} terapeuta(s) desativado(s) com sucesso.')
     desativar_terapeutas.short_description = "Desativar terapeutas selecionados"
-    
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields
-        return ('created_at', 'updated_at')
+
 
 class ConsultaDataFilter(admin.SimpleListFilter):
     title = 'Período'
