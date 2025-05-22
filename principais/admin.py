@@ -186,14 +186,6 @@ class PacienteAdmin(admin.ModelAdmin):
         return "R$ 0,00"
     valor_total_pendente.short_description = 'Total Pendente'
     
-    def media_valor_consulta(self, obj):
-        if obj and obj.pk:
-            media = Consulta.objects.filter(fk_paciente=obj).aggregate(
-                Avg('vlr_consulta')
-            )['vlr_consulta__avg'] or 0
-            return f"R$ {media:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        return "R$ 0,00"
-    media_valor_consulta.short_description = 'Média por Consulta'
 
     # Actions personalizadas
     def ativar_pacientes(self, request, queryset):
