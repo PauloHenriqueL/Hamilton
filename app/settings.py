@@ -4,18 +4,15 @@ from dotenv import load_dotenv
 from urllib.parse import urlparse
 from datetime import timedelta
 
-
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 SECRET_KEY = 'django-insecure-b_@c+-&wf@fgz7&170hixy&hp&k)zq4y62r9r3)ja%^0u@7gkq'
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -62,28 +59,47 @@ TEMPLATES = [
     },
 ]
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
 WSGI_APPLICATION = 'app.wsgi.application'
 
+# CORREÇÃO: Forçar leitura do .env ao invés da variável de ambiente do sistema
+def get_database_url_from_env_file():
+    """Lê DATABASE_URL diretamente do arquivo .env"""
+    env_file = BASE_DIR / '.env'
+    if env_file.exists():
+        with open(env_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip().startswith('DATABASE_URL'):
+                    return line.split('=', 1)[1].strip().strip('\'"')
+    return None
 
-tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+# Usar DATABASE_URL do arquivo .env (prioridade) ou variável de ambiente (fallback)
+DATABASE_URL = get_database_url_from_env_file() or os.getenv("DATABASE_URL")
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.path.replace('/', ''),
-        'USER': tmpPostgres.username,
-        'PASSWORD': tmpPostgres.password,
-        'HOST': tmpPostgres.hostname,
-        'PORT': 5432,
+if DATABASE_URL:
+    tmpPostgres = urlparse(DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': tmpPostgres.path.replace('/', ''),
+            'USER': tmpPostgres.username,
+            'PASSWORD': tmpPostgres.password,
+            'HOST': tmpPostgres.hostname,
+            'PORT': tmpPostgres.port or 5432,
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
+        }
     }
-}
-
+else:
+    # Fallback para SQLite se não houver DATABASE_URL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -98,7 +114,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 LANGUAGE_CODE = 'pt-br'
 

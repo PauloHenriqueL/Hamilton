@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Criar Usuário para Terapeuta - ALLOS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="card-title mb-0">Criar Usuário para {{ terapeuta.nome }}</h5>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Este formulário criará um usuário de acesso ao sistema para o terapeuta selecionado.
+      </div>
+      
+      <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+          <label for="id_username" class="form-label">Nome de usuário</label>
+          <input type="text" name="username" class="form-control" id="id_username" required>
+          <div class="form-text">Obrigatório. 150 caracteres ou menos. Letras, números e @/./+/-/_ apenas.</div>
+          {% if form.username.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.username.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_email" class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" id="id_email" value="{{ form.email.initial }}" required>
+          {% if form.email.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.email.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        
+        <div class="mb-3">
+          <label for="id_password1" class="form-label">Senha</label>
+          <input type="password" name="password1" class="form-control" id="id_password1" required>
+          <div class="form-text">
+            <ul>
+              <li>Sua senha não pode ser muito semelhante às suas outras informações pessoais.</li>
+              <li>Sua senha deve conter pelo menos 8 caracteres.</li>
+              <li>Sua senha não pode ser uma senha comumente utilizada.</li>
+              <li>Sua senha não pode ser inteiramente numérica.</li>
+            </ul>
+          </div>
+          {% if form.password1.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.password1.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        
+        <div class="mb-3">
+          <label for="id_password2" class="form-label">Confirmação de senha</label>
+          <input type="password" name="password2" class="form-control" id="id_password2" required>
+          <div class="form-text">Digite a mesma senha, para verificação.</div>
+          {% if form.password2.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.password2.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        {% endif %}
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+          <a href="{% url 'consulta-list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+          <button type="submit" class="btn btn-primary">Criar Usuário</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

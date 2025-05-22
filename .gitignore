@@ -1,5 +1,8 @@
-
-check_db.py
+limpar_env_sistema.py
+teste_banco_atual.py
+workflow.txt
+debug_db.py
+switch_db.py
 
 # Python environment
 venv/

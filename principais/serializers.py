@@ -26,3 +26,23 @@ class PacienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Paciente
         fields = '__all__'
+
+class FirstkissSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Firstkiss
+        fields = '__all__'
+
+
+class LastkissSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Lastkiss
+        fields = '__all__'
+
+
+class AltadesistenciaSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Altadesistencia
+        fields = '__all__'

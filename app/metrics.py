@@ -72,7 +72,7 @@ def get_consulta_metrics():
     
     # Total de sessões do mês atual
     total_sessoes_mes = models.Consulta.objects.filter(
-        data__gte=primeiro_dia_mes,
+        dat_consulta__gte=primeiro_dia_mes,
         is_realizado=True
     ).count()
     
@@ -91,7 +91,7 @@ def get_consulta_metrics():
     
     # Receita total do mês
     receita_total_mes = models.Consulta.objects.filter(
-        data__gte=primeiro_dia_mes,
+        dat_consulta__gte=primeiro_dia_mes,
         is_pago=True
     ).aggregate(
         total=Sum('vlr_pago')
@@ -206,7 +206,7 @@ def get_daily_consultas_data():
     values = []
 
     for date in dates:
-        consultas_count = models.Consulta.objects.filter(data=date).count()
+        consultas_count = models.Consulta.objects.filter(dat_consulta=date).count()
         values.append(consultas_count)
 
     return dict(
@@ -243,8 +243,8 @@ def get_monthly_consultas_data():
         
         # Contar consultas neste mês
         consultas_count = models.Consulta.objects.filter(
-            data__gte=first_day,
-            data__lt=next_month_first_day
+            dat_consulta__gte=first_day,
+            dat_consulta__lt=next_month_first_day
         ).count()
         valores.append(consultas_count)
     
@@ -282,8 +282,8 @@ def get_monthly_receita_data():
         
         # Calcular receita neste mês
         receita = models.Consulta.objects.filter(
-            data__gte=first_day,
-            data__lt=next_month_first_day,
+            dat_consulta__gte=first_day,
+            dat_consulta__lt=next_month_first_day,
             is_pago=True
         ).aggregate(
             total=Sum('vlr_pago')
@@ -303,7 +303,7 @@ def get_daily_valor_data():
     values = []
 
     for date in dates:
-        valor_total = models.Consulta.objects.filter(data=date).aggregate(
+        valor_total = models.Consulta.objects.filter(dat_consulta=date).aggregate(
             total=Sum('vlr_consulta')
         )['total'] or 0
         values.append(float(valor_total))

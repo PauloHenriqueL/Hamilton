@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator, EmailValidator
 from acessorios.models import Abordagem, Nucleo, Clinica, Modalidade, Captacao
+from django.contrib.auth.models import User
 
 
 class Decano(models.Model):
@@ -44,6 +45,12 @@ class Decano(models.Model):
 
 class Paciente(models.Model):
     pk_paciente = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE, 
+        db_column='fk_clinica',
+        verbose_name="Clínica"
+    )
     fk_captacao = models.ForeignKey(
         Captacao,
         on_delete=models.CASCADE, 
@@ -144,7 +151,8 @@ class Terapeuta(models.Model):
         verbose_name="E-mail",
         validators=[EmailValidator(message="Informe um endereço de e-mail válido.")]
     )
-    
+    faculdade = models.CharField(max_length=255, verbose_name="Faculdade")
+
     # Validação para o telefone
     telefone_validator = RegexValidator(
         regex=r'^\d{10,11}$',
@@ -168,6 +176,7 @@ class Terapeuta(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
+        managed = False
         ordering = ['nome']
         db_table = '"hamilton"."terapeutas"'
         verbose_name = "Terapeuta"
@@ -180,12 +189,6 @@ class Terapeuta(models.Model):
 class Consulta(models.Model):
     
     pk_consulta = models.AutoField(primary_key=True, verbose_name="ID")
-    fk_decano = models.ForeignKey(
-        Decano, 
-        on_delete=models.CASCADE, 
-        db_column='fk_decano',
-        verbose_name="Decano"
-    )
     fk_terapeuta = models.ForeignKey(
         Terapeuta, 
         on_delete=models.CASCADE, 
@@ -210,10 +213,11 @@ class Consulta(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
-    data = models.DateField(null=True, blank=True, verbose_name="Data da Consulta")
+    dat_consulta = models.DateField(null=True, blank=True, verbose_name="Data da Consulta")
 
 
     class Meta:
+        managed = False
         db_table = '"hamilton"."consultas"'
         verbose_name = 'Consulta'
         verbose_name_plural = 'Consultas'
@@ -227,3 +231,79 @@ class Consulta(models.Model):
     
     def __str__(self):
         return f"Consulta do {self.fk_paciente} pelo {self.fk_terapeuta}"
+
+
+class Firstkiss(models.Model):
+    pk_firstkiss = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_terapeuta = models.ForeignKey(
+        Terapeuta, 
+        on_delete=models.CASCADE, 
+        db_column='fk_terapeuta',
+        verbose_name="Terapeuta"
+    )
+    fk_paciente = models.ForeignKey(
+        Paciente, 
+        on_delete=models.CASCADE, 
+        db_column='fk_paciente',
+        verbose_name="Paciente"
+    )
+    dat_consulta = models.DateField(verbose_name="Data da primeira sessão")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+
+    class Meta:
+        managed = False
+        db_table = '"hamilton"."firstkiss"'
+        verbose_name = "Firstkiss"
+        verbose_name_plural = "Firstkiss"
+
+
+class Lastkiss(models.Model):
+    pk_lastkiss = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_terapeuta = models.ForeignKey(
+        Terapeuta, 
+        on_delete=models.CASCADE, 
+        db_column='fk_terapeuta',
+        verbose_name="Terapeuta"
+    )
+    fk_paciente = models.ForeignKey(
+        Paciente, 
+        on_delete=models.CASCADE, 
+        db_column='fk_paciente',
+        verbose_name="Paciente"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+
+    class Meta:
+        managed = False
+        db_table = '"hamilton"."lastkiss"'
+        verbose_name = "Lastkiss"
+        verbose_name_plural = "Lastkiss"
+
+
+class Altadesistencia(models.Model):
+    pk_alta_desistencia = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_terapeuta = models.ForeignKey(
+        Terapeuta, 
+        on_delete=models.CASCADE, 
+        db_column='fk_terapeuta',
+        verbose_name="Terapeuta"
+    )
+    fk_paciente = models.ForeignKey(
+        Paciente, 
+        on_delete=models.CASCADE, 
+        db_column='fk_paciente',
+        verbose_name="Paciente"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+
+    class Meta:
+        managed = False
+        db_table = '"hamilton"."altadesistencia"'
+        verbose_name = "Altadesistencia"
+        verbose_name_plural = "Altadesistencia"
+        

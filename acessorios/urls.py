@@ -26,4 +26,8 @@ urlpatterns = [
     # API URLs para Preferência de Idade
     path('api/v1/prefeidade/', views.PrefeidadeListCreateAPIView.as_view(), name='prefeidade-list-create-api'),
     path('api/v1/prefeidade/<int:pk>/', views.PrefeidadeRetrieveUpdateDestroyAPIView.as_view(), name='prefeidade-detail-api'),
+    
+
+    path('terapeutas/<int:pk_terapeuta>/criar-usuario/', views.create_terapeuta_user, name='create-terapeuta-user'),
+    
 ]

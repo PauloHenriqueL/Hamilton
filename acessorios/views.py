@@ -3,6 +3,74 @@ from . import models
 from . import serializers
 from rest_framework.permissions import IsAuthenticated
 from app.permissions import GlobalDefaultPermission
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from .models import TerapeutaUser
+from .forms import TerapeutaUserForm
+from principais.models import Terapeuta, Consulta
+
+# View para login
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f"Bem-vindo, {username}!")
+                return redirect('consulta-list')
+            else:
+                messages.error(request, "Usuário ou senha inválidos.")
+        else:
+            messages.error(request, "Usuário ou senha inválidos.")
+    else:
+        form = AuthenticationForm()
+    return render(request, "login.html", {"form": form})
+
+# View para logout
+@login_required
+def logout_view(request):
+    logout(request)
+    messages.success(request, "Logout realizado com sucesso!")
+    return redirect('login')
+
+# View para criar um usuário para um terapeuta existente
+@login_required
+def create_terapeuta_user(request, pk_terapeuta):
+    # Verificar se o usuário tem permissão para criar usuários
+    if not request.user.has_perm('auth.add_user'):
+        messages.error(request, "Você não tem permissão para criar usuários.")
+        return redirect('consulta-list')
+        
+    terapeuta = get_object_or_404(Terapeuta, pk_terapeuta=pk_terapeuta)
+    
+    # Verifica se o terapeuta já tem um usuário
+    existing_user = TerapeutaUser.objects.filter(terapeuta=terapeuta).exists()
+    if existing_user:
+        messages.warning(request, "Este terapeuta já possui um usuário associado.")
+        return redirect('consulta-list')
+    
+    if request.method == 'POST':
+        form = TerapeutaUserForm(request.POST)
+        if form.is_valid():
+            user = form.save(terapeuta=terapeuta)
+            messages.success(request, f"Usuário criado com sucesso para {terapeuta.nome}!")
+            return redirect('consulta-list')
+    else:
+        form = TerapeutaUserForm(initial={'email': terapeuta.email})
+    
+    return render(request, 'acessorios/create_terapeuta_user.html', {
+        'form': form,
+        'terapeuta': terapeuta
+    })
+
 
 
 class AbordagemListCreateAPIView(generics.ListCreateAPIView):

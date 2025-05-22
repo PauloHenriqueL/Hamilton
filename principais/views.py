@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from .models import Paciente
 from django.views.decorators.http import require_GET
 from decimal import Decimal
-
+from acessorios.models import TerapeutaUser
 
 @require_GET
 def paciente_valor_sessao(request, pk):
@@ -23,7 +23,6 @@ def paciente_valor_sessao(request, pk):
     except Paciente.DoesNotExist:
         return JsonResponse({'error': 'Paciente não encontrado'}, status=404)
 
-
 class ConsultaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = models.Consulta
     template_name = 'consulta_list.html'
@@ -33,16 +32,29 @@ class ConsultaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Corrigido: filtrando pelo campo fk_paciente__nome ou fk_terapeuta__nome
+        
+        # Filtrar apenas consultas do terapeuta logado
+        try:
+            # Verificar se o usuário atual está associado a um terapeuta
+            terapeuta_user = TerapeutaUser.objects.get(usuario=self.request.user)
+            terapeuta = terapeuta_user.terapeuta
+            queryset = queryset.filter(fk_terapeuta=terapeuta)
+        except TerapeutaUser.DoesNotExist:
+            # Se o usuário não for um terapeuta mas tiver permissão de admin, mostra todas
+            if not self.request.user.is_staff:
+                # Se não for admin nem terapeuta, não mostra nada
+                queryset = queryset.none()
+        
+        # Filtragem por nome
         nome = self.request.GET.get('nome')
         if nome:
             # Busca por nome do paciente ou terapeuta
             queryset = queryset.filter(
-                models.Q(fk_paciente__nome__icontains=nome) | 
-                models.Q(fk_terapeuta__nome__icontains=nome)
+                Q(fk_paciente__nome__icontains=nome) | 
+                Q(fk_terapeuta__nome__icontains=nome)
             )
+        
         return queryset
-
 
 class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = models.Consulta
@@ -50,7 +62,24 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
     form_class = forms.ConsultaForm
     success_url = reverse_lazy('consulta-list')
     permission_required = 'principais.add_consulta'
-
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        
+        # Se o usuário for um terapeuta, pré-selecionar e desabilitar o campo terapeuta
+        try:
+            terapeuta_user = TerapeutaUser.objects.get(usuario=self.request.user)
+            terapeuta = terapeuta_user.terapeuta
+            form.fields['fk_terapeuta'].initial = terapeuta.pk_terapeuta
+            form.fields['fk_terapeuta'].widget.attrs['disabled'] = 'disabled'
+            # Adicionamos um campo oculto para persistir o valor, já que campos disabled não são enviados no POST
+            form.fields['terapeuta_hidden'] = forms.IntegerField(widget=forms.HiddenInput(), initial=terapeuta.pk_terapeuta)
+        except TerapeutaUser.DoesNotExist:
+            # Se o usuário não for terapeuta, mas for staff, permite selecionar
+            pass
+        
+        return form
+    
     def form_valid(self, form):
         # Obtém os dados do formulário
         quantidade = int(self.request.POST.get('quantidade', 1))
@@ -68,6 +97,17 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
         # Cria a instância base sem salvar
         consulta = form.save(commit=False)
         
+        # Se o usuário for um terapeuta, garanta que a consulta seja associada a ele
+        try:
+            terapeuta_user = TerapeutaUser.objects.get(usuario=self.request.user)
+            consulta.fk_terapeuta = terapeuta_user.terapeuta
+        except TerapeutaUser.DoesNotExist:
+            # Se não for terapeuta, usa o valor do formulário
+            # Para campos disabled, recuperamos o valor do campo oculto que adicionamos
+            terapeuta_id = self.request.POST.get('terapeuta_hidden')
+            if terapeuta_id:
+                consulta.fk_terapeuta_id = terapeuta_id
+        
         # Verifica se a primeira consulta foi realizada
         consulta.is_realizado = self.request.POST.get('is_realizado_0', '') == 'on'
         
@@ -81,7 +121,7 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
         
         # Verifica se há uma data específica para a primeira consulta
         if 'data_consulta_0' in self.request.POST and self.request.POST['data_consulta_0']:
-            consulta.data = self.request.POST['data_consulta_0']
+            consulta.dat_consulta = self.request.POST['data_consulta_0']
         
         # Salva a primeira consulta
         consulta.save()
@@ -91,7 +131,6 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
             for i in range(1, quantidade):
                 # Cria uma nova instância com os mesmos dados
                 nova_consulta = models.Consulta(
-                    fk_decano=consulta.fk_decano,
                     fk_terapeuta=consulta.fk_terapeuta,
                     fk_paciente=consulta.fk_paciente,
                     vlr_consulta=consulta.vlr_consulta,
@@ -112,12 +151,11 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
                 # Se houver datas específicas para cada consulta
                 data_key = f'data_consulta_{i}'
                 if data_key in self.request.POST and self.request.POST[data_key]:
-                    nova_consulta.data = self.request.POST[data_key]
+                    nova_consulta.dat_consulta = self.request.POST[data_key]
                 
                 nova_consulta.save()
         
         return redirect(self.success_url)
-
 
 class ConsultaDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = models.Consulta
@@ -206,3 +244,37 @@ class TerapeutaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIVie
     permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = models.Terapeuta.objects.all()
     serializer_class = serializers.TerapeutaSerializer
+
+class FirstkissListCreateAPIView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    queryset = models.Firstkiss.objects.all()
+    serializer_class = serializers.FirstkissSerializer
+
+
+class FirstkissRetrieveUpdateDestroyAPIView(generics.RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    queryset = models.Firstkiss.objects.all()
+    serializer_class = serializers.FirstkissSerializer
+
+class LastkissListCreateAPIView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    queryset = models.Lastkiss.objects.all()
+    serializer_class = serializers.LastkissSerializer
+
+
+class LastkissRetrieveUpdateDestroyAPIView(generics.RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    queryset = models.Lastkiss.objects.all()
+    serializer_class = serializers.LastkissSerializer
+
+
+class AltadesistenciaListCreateAPIView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    queryset = models.Altadesistencia.objects.all()
+    serializer_class = serializers.AltadesistenciaSerializer
+
+
+class AltadesistenciaRetrieveUpdateDestroyAPIView(generics.RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    queryset = models.Altadesistencia.objects.all()
+    serializer_class = serializers.AltadesistenciaSerializer

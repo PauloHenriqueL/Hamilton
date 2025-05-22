@@ -13,15 +13,22 @@ urlpatterns = [
     path('api/v1/consulta/', views.ConsultaListCreateAPIView.as_view(), name='consulta-list-create-api'),
     path('api/v1/consulta/<int:pk>/', views.ConsultaRetrieveUpdateDestroyAPIView.as_view(), name='consulta-detail-api'),
     
-    # Paciente - Padronizados os nomes e URLs
+    
     path('api/v1/paciente/', views.PacienteListCreateAPIView.as_view(), name='paciente-list-create-api'),
     path('api/v1/paciente/<int:pk>/', views.PacienteRetrieveUpdateDestroyAPIView.as_view(), name='paciente-detail-api'),
     
-    # Terapeuta - Padronizados os nomes e URLs
     path('api/v1/terapeuta/', views.TerapeutaListCreateAPIView.as_view(), name='terapeuta-list-create-api'),
     path('api/v1/terapeuta/<int:pk>/', views.TerapeutaRetrieveUpdateDestroyAPIView.as_view(), name='terapeuta-detail-api'),
     
-    # Decano - Padronizados os nomes e URLs
     path('api/v1/decano/', views.DecanoListCreateAPIView.as_view(), name='decano-list-create-api'),
     path('api/v1/decano/<int:pk>/', views.DecanoRetrieveUpdateDestroyAPIView.as_view(), name='decano-detail-api'),
+
+    path('api/v1/firstkiss', views.FirstkissListCreateAPIView.as_view(), name='firstkiss-list'),
+    path('api/v1/firstkiss/<int:pk>', views.FirstkissRetrieveUpdateDestroyAPIView.as_view(), name='firstkiss-update'),
+
+    path('api/v1/lastkiss', views.LastkissListCreateAPIView.as_view(), name='lastkiss-list'),
+    path('api/v1/lastkiss/<int:pk>', views.LastkissRetrieveUpdateDestroyAPIView.as_view(), name='lastkiss-update'),
+    
+    path('api/v1/altadesistencia', views.AltadesistenciaListCreateAPIView.as_view(), name='altadesistencia-list'),
+    path('api/v1/altadesistencia/<int:pk>', views.AltadesistenciaRetrieveUpdateDestroyAPIView.as_view(), name='altadesistencia-update'),
 ]

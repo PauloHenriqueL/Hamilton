@@ -1,7 +1,46 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Nucleo, Captacao, Clinica, Modalidade, Abordagem, Prefeidade
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
+from .models import TerapeutaUser
+from principais.models import Terapeuta
 
+
+class TerapeutaUserInline(admin.StackedInline):
+    model = TerapeutaUser
+    can_delete = False
+    verbose_name_plural = 'Perfil de Terapeuta'
+
+class CustomUserAdmin(UserAdmin):
+    inlines = (TerapeutaUserInline,)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_terapeuta')
+    
+    def get_terapeuta(self, obj):
+        try:
+            return obj.terapeutauser.terapeuta.nome
+        except:
+            return '-'
+    get_terapeuta.short_description = 'Terapeuta'
+
+class TerapeutaUserAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'terapeuta_nome')
+    search_fields = ('usuario__username', 'terapeuta__nome')
+    autocomplete_fields = ['terapeuta']  # Adiciona campo de autocompletar
+    
+    def terapeuta_nome(self, obj):
+        if obj.terapeuta:
+            return obj.terapeuta.nome
+        return '-'
+    terapeuta_nome.short_description = 'Terapeuta'
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Mostra todos os terapeutas ativos na lista suspensa
+        if db_field.name == "terapeuta":
+            kwargs["queryset"] = Terapeuta.objects.filter(is_active=True).order_by('nome')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+admin.site.register(TerapeutaUser, TerapeutaUserAdmin)
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = 'Status'
