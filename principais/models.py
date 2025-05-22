@@ -45,6 +45,12 @@ class Decano(models.Model):
 
 class Paciente(models.Model):
     pk_paciente = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE, 
+        db_column='fk_clinica',
+        verbose_name="Clínica"
+    )
     fk_captacao = models.ForeignKey(
         Captacao,
         on_delete=models.CASCADE, 
@@ -145,7 +151,8 @@ class Terapeuta(models.Model):
         verbose_name="E-mail",
         validators=[EmailValidator(message="Informe um endereço de e-mail válido.")]
     )
-    
+    faculdade = models.CharField(max_length=255, verbose_name="Faculdade")
+
     # Validação para o telefone
     telefone_validator = RegexValidator(
         regex=r'^\d{10,11}$',
