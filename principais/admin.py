@@ -1,12 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.db.models import Sum, Count
 from .models import Decano, Paciente, Terapeuta, Consulta, Firstkiss, Lastkiss, Altadesistencia
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.db.models import Sum, Count, Q, Avg
-from .models import Decano, Paciente, Terapeuta, Consulta, Firstkiss, Lastkiss, Altadesistencia
-
-
 
 class IsActiveFilter(admin.SimpleListFilter):
     title = 'Status'
@@ -69,15 +66,13 @@ class DecanoAdmin(admin.ModelAdmin):
 
 @admin.register(Paciente)
 class PacienteAdmin(admin.ModelAdmin):
-    list_display = (
-        'nome', 'telefone', 'email', 'vlr_sessao_formatado', 
-        'status_ativo', 'total_consultas', 'created_at'
-    )
-
-    search_fields = ('nome', 'email', 'telefone', 'nome_contato_apoio')
-
+    list_display = ('nome', 'telefone', 'email', 'vlr_sessao', 'status_ativo', 'total_consultas', 'data_ultima_consulta', 'created_at')
+    list_filter = (IsActiveFilter, 'fk_captacao', 'fk_clinica', 'created_at')  # Adicionado fk_clinica
+    search_fields = ('nome', 'email', 'telefone')
+    readonly_fields = ('created_at', 'updated_at', 'total_consultas', 'data_ultima_consulta')
     
     def get_fieldsets(self, request, obj=None):
+        # Fieldsets básicos para criação e edição
         fieldsets = [
             ('Informações Pessoais', {
                 'fields': ('nome', 'email', 'telefone', 'dat_nascimento')
@@ -87,107 +82,15 @@ class PacienteAdmin(admin.ModelAdmin):
                 'classes': ('collapse',)
             }),
             ('Informações de Cadastro', {
-                'fields': ('fk_clinica', 'fk_captacao', 'vlr_sessao', 'is_active')
+                'fields': ('fk_clinica', 'fk_captacao', 'vlr_sessao', 'is_active')  # Adicionado fk_clinica
             }),
         ]
         
-        return fieldsets
-    
-    date_hierarchy = 'created_at'
-    list_per_page = 25
-    actions = ['ativar_pacientes', 'desativar_pacientes']
-
-    def vlr_sessao_formatado(self, obj):
-        try:
-            return f"R$ {obj.vlr_sessao:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        except:
-            return "R$ 0,00"
-    vlr_sessao_formatado.short_description = 'Valor da Sessão'
-    vlr_sessao_formatado.admin_order_field = 'vlr_sessao'
-
-    def status_ativo(self, obj):
-        if obj.is_active:
-            return format_html('<span style="color:green;font-weight:bold;">✓ Ativo</span>')
-        return format_html('<span style="color:red;font-weight:bold;">✗ Inativo</span>')
-    status_ativo.short_description = 'Status'
-    
-    def total_consultas(self, obj):
-        if obj and obj.pk:
-            return Consulta.objects.filter(fk_paciente=obj).count()
-        return 0
-    total_consultas.short_description = 'Total Consultas'
-    
-    def valor_total_pago(self, obj):
-        if obj and obj.pk:
-            total = Consulta.objects.filter(
-                fk_paciente=obj, is_pago=True
-            ).aggregate(Sum('vlr_pago'))['vlr_pago__sum'] or 0
-            return f"R$ {total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        return "R$ 0,00"
-    valor_total_pago.short_description = 'Total Pago'
-    
-    def valor_total_pendente(self, obj):
-        if obj and obj.pk:
-            total = Consulta.objects.filter(
-                fk_paciente=obj, is_realizado=True, is_pago=False
-            ).aggregate(Sum('vlr_consulta'))['vlr_consulta__sum'] or 0
-            return f"R$ {total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        return "R$ 0,00"
-    valor_total_pendente.short_description = 'Total Pendente'
-    
-
-    # Actions personalizadas
-    def ativar_pacientes(self, request, queryset):
-        updated = queryset.update(is_active=True)
-        self.message_user(request, f'{updated} paciente(s) ativado(s) com sucesso.')
-    ativar_pacientes.short_description = "Ativar pacientes selecionados"
-
-    def desativar_pacientes(self, request, queryset):
-        updated = queryset.update(is_active=False)
-        self.message_user(request, f'{updated} paciente(s) desativado(s) com sucesso.')
-    desativar_pacientes.short_description = "Desativar pacientes selecionados"
-    
-
-
-@admin.register(Terapeuta)
-class TerapeutaAdmin(admin.ModelAdmin):
-    list_display = (
-        'nome', 'email', 'telefone', 'abordagem_nome', 'clinica_nome', 
-        'status_ativo', 'total_pacientes', 'total_consultas', 'taxa_realizacao_formatada',
-        'receita_total', 'created_at'
-    )
-    list_filter = (
-        IsActiveFilter, 'fk_abordagem', 'fk_nucleo', 'fk_clinica', 
-        'fk_modalidade', 'sexo', 'fk_decano', 'created_at'
-    )
-    search_fields = ('nome', 'email', 'telefone', 'faculdade')
-
-    
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = [
-            ('Informações Pessoais', {
-                'fields': ('nome', 'email', 'telefone', 'dat_nascimento', 'sexo')
-            }),
-            ('Informações Acadêmicas', {
-                'fields': ('faculdade',)
-            }),
-            ('Informações Profissionais', {
-                'fields': ('fk_decano', 'fk_abordagem', 'fk_nucleo', 'fk_clinica', 'fk_modalidade')
-            }),
-            ('Status', {
-                'fields': ('is_active',)
-            }),
-        ]
-        
+        # Adiciona estatísticas e datas apenas no modo de edição
         if obj:
             fieldsets.append(
-                ('Estatísticas Detalhadas', {
-                    'fields': (
-                        'total_pacientes', 'total_consultas', 'taxa_realizacao',
-                        'receita_total', 'receita_pendente', 'media_consultas_por_paciente',
-                        'paciente_mais_frequente'
-                    ),
-                    'classes': ('collapse',)
+                ('Estatísticas', {
+                    'fields': ('total_consultas', 'data_ultima_consulta'),
                 })
             )
             fieldsets.append(
@@ -201,7 +104,74 @@ class TerapeutaAdmin(admin.ModelAdmin):
     
     date_hierarchy = 'created_at'
     list_per_page = 20
-    actions = ['ativar_terapeutas', 'desativar_terapeutas']
+
+    def status_ativo(self, obj):
+        if obj.is_active:
+            return format_html('<span style="color:green;font-weight:bold;">✓ Ativo</span>')
+        return format_html('<span style="color:red;font-weight:bold;">✗ Inativo</span>')
+    status_ativo.short_description = 'Status'
+    
+    def total_consultas(self, obj):
+        if obj and obj.pk:
+            return Consulta.objects.filter(fk_paciente=obj).count()
+        return 0
+    total_consultas.short_description = 'Total de Consultas'
+    
+    def data_ultima_consulta(self, obj):
+        if obj and obj.pk:
+            ultima = Consulta.objects.filter(fk_paciente=obj).order_by('-dat_consulta').first()  # Corrigido: dat_consulta
+            if ultima and ultima.dat_consulta:
+                return ultima.dat_consulta
+        return '-'
+    data_ultima_consulta.short_description = 'Última Consulta'
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Em modo de edição
+            return self.readonly_fields
+        return ()  # Em modo de criação, nenhum campo somente-leitura
+
+
+@admin.register(Terapeuta)
+class TerapeutaAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'email', 'telefone', 'faculdade', 'abordagem_nome', 'clinica_nome', 'status_ativo', 'total_pacientes', 'total_consultas', 'created_at')  # Adicionado faculdade
+    list_filter = (IsActiveFilter, 'fk_abordagem', 'fk_nucleo', 'fk_clinica', 'fk_modalidade', 'sexo')
+    search_fields = ('nome', 'email', 'telefone', 'faculdade')  # Adicionado faculdade
+    readonly_fields = ('created_at', 'updated_at', 'total_pacientes', 'total_consultas', 'taxa_realizacao')
+    
+    def get_fieldsets(self, request, obj=None):
+        # Fieldsets básicos para criação e edição
+        fieldsets = [
+            ('Informações Pessoais', {
+                'fields': ('nome', 'email', 'telefone', 'dat_nascimento', 'sexo')
+            }),
+            ('Informações Acadêmicas', {
+                'fields': ('faculdade',)  # Adicionado seção para faculdade
+            }),
+            ('Informações Profissionais', {
+                'fields': ('fk_decano', 'fk_abordagem', 'fk_nucleo', 'fk_clinica', 'fk_modalidade')
+            }),
+            ('Status', {
+                'fields': ('is_active',)
+            }),
+        ]
+        
+        # Adiciona estatísticas e datas apenas no modo de edição
+        if obj:
+            fieldsets.append(
+                ('Estatísticas', {
+                    'fields': ('total_pacientes', 'total_consultas', 'taxa_realizacao'),
+                })
+            )
+            fieldsets.append(
+                ('Datas do Sistema', {
+                    'fields': ('created_at', 'updated_at'),
+                    'classes': ('collapse',)
+                })
+            )
+        
+        return fieldsets
+    
+    date_hierarchy = 'created_at'
     
     def status_ativo(self, obj):
         if obj.is_active:
@@ -214,26 +184,25 @@ class TerapeutaAdmin(admin.ModelAdmin):
             return obj.fk_abordagem.abordagem
         return '-'
     abordagem_nome.short_description = 'Abordagem'
-    abordagem_nome.admin_order_field = 'fk_abordagem__abordagem'
     
     def clinica_nome(self, obj):
         if obj and obj.fk_clinica:
             return obj.fk_clinica.clinica
         return '-'
     clinica_nome.short_description = 'Clínica'
-    clinica_nome.admin_order_field = 'fk_clinica__clinica'
     
     def total_pacientes(self, obj):
         if obj and obj.pk:
+            # Conta pacientes únicos que tiveram consultas com este terapeuta
             return Consulta.objects.filter(fk_terapeuta=obj).values('fk_paciente').distinct().count()
         return 0
-    total_pacientes.short_description = 'Pacientes'
+    total_pacientes.short_description = 'Total de Pacientes'
     
     def total_consultas(self, obj):
         if obj and obj.pk:
             return Consulta.objects.filter(fk_terapeuta=obj).count()
         return 0
-    total_consultas.short_description = 'Consultas'
+    total_consultas.short_description = 'Total de Consultas'
     
     def taxa_realizacao(self, obj):
         if obj and obj.pk:
@@ -241,71 +210,15 @@ class TerapeutaAdmin(admin.ModelAdmin):
             total = consultas.count()
             realizadas = consultas.filter(is_realizado=True).count()
             if total > 0:
-                return (realizadas / total) * 100
-        return 0
-    taxa_realizacao.short_description = 'Taxa Realização (%)'
+                taxa = (realizadas / total) * 100
+                return f"{taxa:.1f}%"
+        return "N/A"
+    taxa_realizacao.short_description = 'Taxa de Realização'
     
-    def taxa_realizacao_formatada(self, obj):
-        taxa = self.taxa_realizacao(obj)
-        if taxa > 0:
-            color = 'green' if taxa >= 80 else 'orange' if taxa >= 60 else 'red'
-            return format_html(
-                '<span style="color:{};">{:.1f}%</span>',
-                color, taxa
-            )
-        return "0%"
-    taxa_realizacao_formatada.short_description = 'Taxa Real.'
-    
-    def receita_total(self, obj):
-        if obj and obj.pk:
-            total = Consulta.objects.filter(
-                fk_terapeuta=obj, is_pago=True
-            ).aggregate(Sum('vlr_pago'))['vlr_pago__sum'] or 0
-            return f"R$ {total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        return "R$ 0,00"
-    receita_total.short_description = 'Receita Total'
-    
-    def receita_pendente(self, obj):
-        if obj and obj.pk:
-            total = Consulta.objects.filter(
-                fk_terapeuta=obj, is_realizado=True, is_pago=False
-            ).aggregate(Sum('vlr_consulta'))['vlr_consulta__sum'] or 0
-            return f"R$ {total:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-        return "R$ 0,00"
-    receita_pendente.short_description = 'Receita Pendente'
-    
-    def media_consultas_por_paciente(self, obj):
-        if obj and obj.pk:
-            total_consultas = Consulta.objects.filter(fk_terapeuta=obj).count()
-            total_pacientes = Consulta.objects.filter(fk_terapeuta=obj).values('fk_paciente').distinct().count()
-            if total_pacientes > 0:
-                return f"{total_consultas / total_pacientes:.1f}"
-        return "0"
-    media_consultas_por_paciente.short_description = 'Média Cons./Paciente'
-    
-    def paciente_mais_frequente(self, obj):
-        if obj and obj.pk:
-            paciente = Consulta.objects.filter(fk_terapeuta=obj).values(
-                'fk_paciente__nome'
-            ).annotate(
-                total=Count('fk_paciente')
-            ).order_by('-total').first()
-            
-            if paciente:
-                return f"{paciente['fk_paciente__nome']} ({paciente['total']} consultas)"
-        return "-"
-    paciente_mais_frequente.short_description = 'Paciente + Frequente'
-
-    # Actions personalizadas
-    def ativar_terapeutas(self, request, queryset):
-        updated = queryset.update(is_active=True)
-        self.message_user(request, f'{updated} terapeuta(s) ativado(s) com sucesso.')
-    ativar_terapeutas.short_description = "Ativar terapeutas selecionados"
-
-    def desativar_terapeutas(self, request, queryset):
-        updated = queryset.update(is_active=False)
-        self.message_user(request, f'{updated} terapeuta(s) desativado(s) com sucesso.')
-    desativar_terapeutas.short_description = "Desativar terapeutas selecionados"
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # Em modo de edição
+            return self.readonly_fields
+        return ()  # Em modo de criação, nenhum campo somente-leitura
 
 
 class ConsultaDataFilter(admin.SimpleListFilter):
