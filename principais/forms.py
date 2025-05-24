@@ -1,11 +1,9 @@
 from django import forms
-from . import models
-import re
 from django.core.exceptions import ObjectDoesNotExist
+from . import models 
 import logging
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger('principais')
 
 class ConsultaForm(forms.ModelForm):
     
@@ -95,46 +93,22 @@ class ConsultaForm(forms.ModelForm):
                 except ObjectDoesNotExist:
                     logger.warning(f"Paciente com ID {paciente_id} não encontrado")
     
-    def clean(self):
-        cleaned_data = super().clean()
-        vlr_consulta = cleaned_data.get('vlr_consulta')
-        vlr_pago = cleaned_data.get('vlr_pago')
-        is_realizado = cleaned_data.get('is_realizado')
-        is_pago = cleaned_data.get('is_pago')
-        
-        logger.info(f"Iniciando clean(). Data recebida: {dict(self.data)}")
-        
-        # CORREÇÃO PRINCIPAL: Se o campo terapeuta estiver desabilitado ou vazio, usar o valor do campo oculto
-        terapeuta_hidden_value = self.data.get('terapeuta_hidden')
-        
-        if terapeuta_hidden_value:
-            logger.info(f"Usando valor do campo oculto: {terapeuta_hidden_value}")
-            try:
-                terapeuta_id = int(terapeuta_hidden_value)
-                terapeuta = models.Terapeuta.objects.get(pk=terapeuta_id)
-                cleaned_data['fk_terapeuta'] = terapeuta
-                logger.info(f"Terapeuta definido via campo oculto: {terapeuta}")
-            except (ValueError, TypeError, models.Terapeuta.DoesNotExist) as e:
-                logger.error(f"Erro ao processar terapeuta_hidden: {e}")
-                self.add_error('fk_terapeuta', 'Terapeuta inválido.')
-        
-        # Se ainda não há terapeuta no cleaned_data, é um erro
-        if not cleaned_data.get('fk_terapeuta'):
-            logger.error("Nenhum terapeuta foi definido")
-            self.add_error('fk_terapeuta', 'O campo terapeuta é obrigatório.')
-        else:
-            logger.info(f"Terapeuta final: {cleaned_data.get('fk_terapeuta')}")
-        
-        # Validação de valores positivos
-        if vlr_consulta is not None and vlr_consulta <= 0:
-            self.add_error('vlr_consulta', 'O valor da consulta deve ser positivo.')
-        
-        if vlr_pago is not None and vlr_pago < 0:
-            self.add_error('vlr_pago', 'O valor pago não pode ser negativo.')
-        
-        # Consultas não realizadas não podem estar pagas
-        if is_realizado is False and is_pago is True:
-            self.add_error('is_pago', 'Uma consulta não realizada não pode estar paga.')
-        
-        logger.info(f"Clean finalizado. Cleaned_data: {cleaned_data}")
-        return cleaned_data
+def clean(self):
+    cleaned_data = super().clean()
+    vlr_consulta = cleaned_data.get('vlr_consulta')
+    vlr_pago = cleaned_data.get('vlr_pago')
+    is_realizado = cleaned_data.get('is_realizado')
+    is_pago = cleaned_data.get('is_pago')
+    
+    # Validação de valores positivos
+    if vlr_consulta is not None and vlr_consulta <= 0:
+        self.add_error('vlr_consulta', 'O valor da consulta deve ser positivo.')
+    
+    if vlr_pago is not None and vlr_pago < 0:
+        self.add_error('vlr_pago', 'O valor pago não pode ser negativo.')
+    
+    # Consultas não realizadas não podem estar pagas
+    if is_realizado is False and is_pago is True:
+        self.add_error('is_pago', 'Uma consulta não realizada não pode estar paga.')
+    
+    return cleaned_data

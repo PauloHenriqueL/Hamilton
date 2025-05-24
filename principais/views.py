@@ -63,6 +63,8 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
     success_url = reverse_lazy('consulta-list')
     permission_required = 'principais.add_consulta'
     
+# Substitua APENAS o método get_form() na sua view por este:
+
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         
@@ -70,10 +72,20 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
         try:
             terapeuta_user = TerapeutaUser.objects.get(usuario=self.request.user)
             terapeuta = terapeuta_user.terapeuta
+            
+            # Definir o valor inicial
             form.fields['fk_terapeuta'].initial = terapeuta.pk_terapeuta
-            form.fields['fk_terapeuta'].widget.attrs['disabled'] = 'disabled'
-            # Adicionamos um campo oculto para persistir o valor, já que campos disabled não são enviados no POST
-            form.fields['terapeuta_hidden'] = forms.IntegerField(widget=forms.HiddenInput(), initial=terapeuta.pk_terapeuta)
+            
+            # Em vez de disabled, usar readonly para manter o valor
+            form.fields['fk_terapeuta'].widget.attrs.update({
+                'readonly': 'readonly',
+                'style': 'pointer-events: none; background-color: #343a40 !important; color: #ffffff !important; border-color: #495057 !important;'
+            })
+            
+            # Não precisamos do campo oculto, vamos forçar o valor diretamente
+            # Criar um queryset que só contenha este terapeuta
+            form.fields['fk_terapeuta'].queryset = form.fields['fk_terapeuta'].queryset.filter(pk=terapeuta.pk_terapeuta)
+            
         except TerapeutaUser.DoesNotExist:
             # Se o usuário não for terapeuta, mas for staff, permite selecionar
             pass
@@ -103,10 +115,12 @@ class ConsultaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
             consulta.fk_terapeuta = terapeuta_user.terapeuta
         except TerapeutaUser.DoesNotExist:
             # Se não for terapeuta, usa o valor do formulário
-            # Para campos disabled, recuperamos o valor do campo oculto que adicionamos
-            terapeuta_id = self.request.POST.get('terapeuta_hidden')
-            if terapeuta_id:
-                consulta.fk_terapeuta_id = terapeuta_id
+            # IMPORTANTE: Para usuários não-terapeutas (staff/admin), o valor já vem no form.cleaned_data
+            if not consulta.fk_terapeuta:
+                # Se ainda não tem terapeuta definido, há um problema
+                from django.contrib import messages
+                messages.error(self.request, 'Erro: Terapeuta não foi definido corretamente.')
+                return self.form_invalid(form)
         
         # Verifica se a primeira consulta foi realizada
         consulta.is_realizado = self.request.POST.get('is_realizado_0', '') == 'on'
