@@ -82,7 +82,7 @@ class PacienteAdmin(admin.ModelAdmin):
                 'classes': ('collapse',)
             }),
             ('Informações de Cadastro', {
-                'fields': ('fk_clinica', 'fk_captacao', 'vlr_sessao', 'is_active')  # Adicionado fk_clinica
+                'fields': ('fk_clinica', 'fk_modalidade', 'fk_captacao', 'vlr_sessao', 'oberservacao', 'is_active')  # Adicionado fk_clinica
             }),
         ]
         
@@ -372,8 +372,8 @@ class FirstkissDataFilter(admin.SimpleListFilter):
 
 @admin.register(Firstkiss)
 class FirstkissAdmin(admin.ModelAdmin):
-    list_display = ('dat_consulta', 'paciente_nome', 'terapeuta_nome','created_at')
-    list_filter = (FirstkissDataFilter, 'fk_terapeuta', 'fk_paciente')
+    list_display = ('dat_consulta', 'paciente_nome', 'terapeuta_nome', 'consentimento_paciente', 'continuar_mesmo_terapeuta', 'created_at')
+    list_filter = (FirstkissDataFilter, 'fk_terapeuta', 'fk_paciente', 'consentimento_paciente', 'continuar_mesmo_terapeuta')
     search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
     readonly_fields = ('created_at', 'updated_at')
     
@@ -381,6 +381,20 @@ class FirstkissAdmin(admin.ModelAdmin):
         fieldsets = [
             ('Informações Básicas', {
                 'fields': ('fk_terapeuta', 'fk_paciente', 'dat_consulta')
+            }),
+            ('Consentimento', {
+                'fields': ('consentimento_paciente',)
+            }),
+            ('Avaliação de Bem-estar (1-10)', {
+                'fields': ('individual', 'interpessoal', 'social', 'geral'),
+                'classes': ('wide',)
+            }),
+            ('Avaliação da Terapia (1-10)', {
+                'fields': ('acolhimento', 'abordagem', 'expectativa'),
+                'classes': ('wide',)
+            }),
+            ('Continuidade', {
+                'fields': ('continuar_mesmo_terapeuta',)
             }),
         ]
         
@@ -418,10 +432,10 @@ class FirstkissAdmin(admin.ModelAdmin):
         return ()  # Em modo de criação, nenhum campo somente-leitura
 
 
-@admin.register(Altadesistencia)
-class AltadesistenciaAdmin(admin.ModelAdmin):
-    list_display = ('paciente_nome', 'terapeuta_nome','created_at')
-    list_filter = ('fk_terapeuta', 'fk_paciente')
+@admin.register(Lastkiss)
+class LastkissAdmin(admin.ModelAdmin):
+    list_display = ('paciente_nome', 'terapeuta_nome', 'consentimento_paciente', 'terapia_outro_terapeuta', 'recomendaria_outros', 'created_at')
+    list_filter = ('fk_terapeuta', 'fk_paciente', 'consentimento_paciente', 'terapia_outro_terapeuta', 'recomendaria_outros')
     search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
     readonly_fields = ('created_at', 'updated_at')
     
@@ -429,6 +443,20 @@ class AltadesistenciaAdmin(admin.ModelAdmin):
         fieldsets = [
             ('Informações Básicas', {
                 'fields': ('fk_terapeuta', 'fk_paciente')
+            }),
+            ('Consentimento', {
+                'fields': ('consentimento_paciente',)
+            }),
+            ('Avaliação de Bem-estar (1-10)', {
+                'fields': ('individual', 'interpessoal', 'social', 'geral'),
+                'classes': ('wide',)
+            }),
+            ('Avaliação da Terapia (1-10)', {
+                'fields': ('acolhimento', 'abordagem', 'expectativa'),
+                'classes': ('wide',)
+            }),
+            ('Avaliação Final', {
+                'fields': ('terapia_outro_terapeuta', 'recomendaria_outros')
             }),
         ]
         
@@ -442,7 +470,7 @@ class AltadesistenciaAdmin(admin.ModelAdmin):
             )
         
         return fieldsets
-
+    
     list_per_page = 30
     
     def paciente_nome(self, obj):
@@ -465,17 +493,20 @@ class AltadesistenciaAdmin(admin.ModelAdmin):
         return ()  # Em modo de criação, nenhum campo somente-leitura
 
 
-@admin.register(Lastkiss)
-class LastkissAdmin(admin.ModelAdmin):
-    list_display = ('paciente_nome', 'terapeuta_nome','created_at')
-    list_filter = ('fk_terapeuta', 'fk_paciente')
-    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome')
+@admin.register(Altadesistencia)
+class AltadesistenciaAdmin(admin.ModelAdmin):
+    list_display = ('paciente_nome', 'terapeuta_nome', 'dat_sessao', 'cancelador', 'created_at')
+    list_filter = ('fk_terapeuta', 'fk_paciente', 'cancelador', 'dat_sessao')
+    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome', 'motivo_cancel')
     readonly_fields = ('created_at', 'updated_at')
     
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             ('Informações Básicas', {
                 'fields': ('fk_terapeuta', 'fk_paciente')
+            }),
+            ('Detalhes da Sessão', {
+                'fields': ('dat_sessao', 'cancelador', 'motivo_cancel')
             }),
         ]
         
@@ -489,8 +520,9 @@ class LastkissAdmin(admin.ModelAdmin):
             )
         
         return fieldsets
-    
+
     list_per_page = 30
+    date_hierarchy = 'dat_sessao'
     
     def paciente_nome(self, obj):
         if obj and obj.fk_paciente:
