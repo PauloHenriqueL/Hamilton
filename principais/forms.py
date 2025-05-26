@@ -1,8 +1,9 @@
 from django import forms
-from . import models
-import re
 from django.core.exceptions import ObjectDoesNotExist
+from . import models 
+import logging
 
+logger = logging.getLogger('principais')
 
 class ConsultaForm(forms.ModelForm):
     
@@ -15,7 +16,7 @@ class ConsultaForm(forms.ModelForm):
             'is_realizado',  
             'is_pago', 
             'vlr_pago',
-            'dat_consulta',  # Adicionando o campo de data
+            'dat_consulta',
         ]
         widgets = {
             'fk_terapeuta': forms.Select(attrs={'class': 'form-control'}),
@@ -23,30 +24,31 @@ class ConsultaForm(forms.ModelForm):
             'vlr_consulta': forms.NumberInput(attrs={'class': 'form-control', 'id': 'valor-consulta'}),
             'is_realizado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_pago': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'vlr_pago': forms.NumberInput(attrs={'class': 'form-control'}),
+            'vlr_pago': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'dat_consulta': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
         }
         labels = {
             'fk_terapeuta': 'Terapeuta', 
             'fk_paciente': 'Paciente', 
             'vlr_consulta': 'Valor da consulta',
-            'is_realizado': 'Foi realizado?',  
-            'is_pago': 'Foi pago?', 
-            'vlr_pago': 'Valor pago?',
+            'is_realizado': 'Foi realizada?',  
+            'is_pago': 'Foi paga?', 
+            'vlr_pago': 'Valor pago',
             'dat_consulta': 'Data da consulta'
         }
 
     quantidade = forms.IntegerField(
         min_value=1,
         initial=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control'}),
-        required=False
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'value': '1'}),
+        required=False,
+        label='Quantidade de consultas'
     )
     
     vlr_pix_total = forms.DecimalField(
         decimal_places=2,
         required=False,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
         label='Valor total recebido no PIX'
     )
     
@@ -54,7 +56,31 @@ class ConsultaForm(forms.ModelForm):
     terapeuta_hidden = forms.IntegerField(required=False, widget=forms.HiddenInput())
     
     def __init__(self, *args, **kwargs):
+        # Extrair parâmetros customizados antes de chamar super()
+        user_terapeuta = kwargs.pop('user_terapeuta', None)
         super().__init__(*args, **kwargs)
+        
+        logger.info(f"Inicializando formulário. user_terapeuta: {user_terapeuta}")
+        
+        # Se um terapeuta foi passado para o formulário, configurar os campos
+        if user_terapeuta:
+            logger.info(f"Configurando terapeuta: {user_terapeuta.pk_terapeuta} - {user_terapeuta.nome}")
+            
+            # Definir o valor inicial e desabilitar o campo
+            self.fields['fk_terapeuta'].initial = user_terapeuta.pk_terapeuta
+            self.fields['fk_terapeuta'].widget.attrs.update({
+                'disabled': 'disabled',
+                'readonly': 'readonly'
+            })
+            
+            # Definir o campo oculto
+            self.fields['terapeuta_hidden'].initial = user_terapeuta.pk_terapeuta
+            
+            # IMPORTANTE: Marcar o campo como não obrigatório quando desabilitado
+            # pois campos disabled não são enviados no POST
+            self.fields['fk_terapeuta'].required = False
+            
+            logger.info(f"Campo terapeuta configurado. Initial: {self.fields['fk_terapeuta'].initial}, Hidden: {self.fields['terapeuta_hidden'].initial}")
         
         # Se o formulário for preenchido com dados POST e tiver paciente selecionado
         if args and isinstance(args[0], dict) and 'fk_paciente' in args[0]:
@@ -63,25 +89,26 @@ class ConsultaForm(forms.ModelForm):
                 try:
                     paciente = models.Paciente.objects.get(pk=paciente_id)
                     self.fields['vlr_consulta'].initial = paciente.vlr_sessao
+                    logger.info(f"Valor da consulta definido automaticamente: {paciente.vlr_sessao}")
                 except ObjectDoesNotExist:
-                    pass
+                    logger.warning(f"Paciente com ID {paciente_id} não encontrado")
     
-    def clean(self):
-        cleaned_data = super().clean()
-        vlr_consulta = cleaned_data.get('vlr_consulta')
-        vlr_pago = cleaned_data.get('vlr_pago')
-        is_realizado = cleaned_data.get('is_realizado')
-        is_pago = cleaned_data.get('is_pago')
-        
-        # Validação de valores positivos
-        if vlr_consulta is not None and vlr_consulta <= 0:
-            self.add_error('vlr_consulta', 'O valor da consulta deve ser positivo.')
-        
-        if vlr_pago is not None and vlr_pago < 0:
-            self.add_error('vlr_pago', 'O valor pago não pode ser negativo.')
-        
-        # Consultas não realizadas não podem estar pagas
-        if is_realizado is False and is_pago is True:
-            self.add_error('is_pago', 'Uma consulta não realizada não pode estar paga.')
-        
-        return cleaned_data
+def clean(self):
+    cleaned_data = super().clean()
+    vlr_consulta = cleaned_data.get('vlr_consulta')
+    vlr_pago = cleaned_data.get('vlr_pago')
+    is_realizado = cleaned_data.get('is_realizado')
+    is_pago = cleaned_data.get('is_pago')
+    
+    # Validação de valores positivos
+    if vlr_consulta is not None and vlr_consulta <= 0:
+        self.add_error('vlr_consulta', 'O valor da consulta deve ser positivo.')
+    
+    if vlr_pago is not None and vlr_pago < 0:
+        self.add_error('vlr_pago', 'O valor pago não pode ser negativo.')
+    
+    # Consultas não realizadas não podem estar pagas
+    if is_realizado is False and is_pago is True:
+        self.add_error('is_pago', 'Uma consulta não realizada não pode estar paga.')
+    
+    return cleaned_data

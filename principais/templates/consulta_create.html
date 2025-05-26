@@ -13,6 +13,9 @@ ALLOS - Cadastrar Consulta
         <form method="post" class="form" novalidate>
           {% csrf_token %}
           
+          <!-- IMPORTANTE: Renderizar o campo oculto -->
+          {{ form.terapeuta_hidden }}
+          
           {% if form.errors %}
           <div class="alert alert-danger">
             Por favor, corrija os erros abaixo.
@@ -20,14 +23,7 @@ ALLOS - Cadastrar Consulta
           {% endif %}
           
           <div class="row g-3">
-            
-            <div class="col-md-6 mb-3">
-              <label for="{{ form.fk_decano.id_for_label }}" class="form-label">{{ form.fk_decano.label }}</label>
-              {{ form.fk_decano }}
-              {% if form.fk_decano.errors %}
-                <div class="invalid-feedback d-block">{{ form.fk_decano.errors }}</div>
-              {% endif %}
-            </div>
+
 
             <div class="col-md-6 mb-3">
               <label for="{{ form.fk_terapeuta.id_for_label }}" class="form-label">{{ form.fk_terapeuta.label }}</label>
@@ -203,3 +199,4 @@ ALLOS - Cadastrar Consulta
     });
   </script>
 {% endblock %}
+

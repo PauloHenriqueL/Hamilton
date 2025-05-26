@@ -3,6 +3,9 @@ from django.utils import timezone
 from django.core.validators import RegexValidator, EmailValidator
 from acessorios.models import Abordagem, Nucleo, Clinica, Modalidade, Captacao
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 
 
 class Decano(models.Model):
@@ -59,7 +62,13 @@ class Paciente(models.Model):
     )
     nome = models.CharField(max_length=255, verbose_name="Nome")
     
-    # Validação para o email
+    fk_modalidade = models.ForeignKey(
+        Modalidade,
+        on_delete=models.CASCADE, 
+        db_column='fk_modalidade',
+        verbose_name="Modalidade"
+    )
+
     email = models.EmailField(
         blank=True, 
         null=True, 
@@ -67,7 +76,7 @@ class Paciente(models.Model):
         validators=[EmailValidator(message="Informe um endereço de e-mail válido.")]
     )
     
-    # Validação para o telefone
+
     telefone_validator = RegexValidator(
         regex=r'^\d{10,11}$',
         message="O telefone deve conter 10 ou 11 dígitos numéricos. Exemplo: 31988553344"
@@ -96,8 +105,9 @@ class Paciente(models.Model):
     )
     
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
-    vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Sessão")
+    vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Acordado")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    oberservacao = models.TextField(null=True, blank=True, verbose_name="Observações")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
@@ -248,6 +258,58 @@ class Firstkiss(models.Model):
         verbose_name="Paciente"
     )
     dat_consulta = models.DateField(verbose_name="Data da primeira sessão")
+    
+    consentimento_paciente = models.BooleanField(
+        default=False, 
+        verbose_name="Consentimento do Paciente"
+    )
+    individual = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Bem-estar Pessoal (1-10)"
+    )
+    interpessoal = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Família/Relacionamentos Íntimos (1-10)"
+    )
+    social = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Trabalho/Faculdade/Família (1-10)"
+    )
+    geral = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Estado Geral de Bem-estar (1-10)"
+    )
+    acolhimento = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Acolhimento (1-10)"
+    )
+    abordagem = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Abordagem (1-10)"
+    )
+    expectativa = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Expectativa (1-10)"
+    )
+    continuar_mesmo_terapeuta = models.BooleanField(
+        default=False,
+        verbose_name="Deseja continuar com o mesmo terapeuta"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
@@ -272,6 +334,67 @@ class Lastkiss(models.Model):
         db_column='fk_paciente',
         verbose_name="Paciente"
     )
+    
+    consentimento_paciente = models.BooleanField(
+        null=True,
+        blank=True,
+        default=False, 
+        verbose_name="Consentimento do Paciente"
+    )
+    individual = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Bem-estar Pessoal (1-10)"
+    )
+    interpessoal = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Família/Relacionamentos Íntimos (1-10)"
+    )
+    social = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Trabalho/Faculdade/Família (1-10)"
+    )
+    geral = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Estado Geral de Bem-estar (1-10)"
+    )
+    acolhimento = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Acolhimento (1-10)"
+    )
+    abordagem = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Abordagem (1-10)"
+    )
+    expectativa = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Expectativa (1-10)"
+    )
+    terapia_outro_terapeuta = models.BooleanField(
+        null=True,
+        blank=True,
+        default=False,
+        verbose_name="Deseja realizar terapia com outro terapeuta"
+    )
+    recomendaria_outros = models.BooleanField(
+        null=True,
+        blank=True,
+        default=False,
+        verbose_name="Recomendaria a allos para outras pessoas"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
@@ -281,7 +404,6 @@ class Lastkiss(models.Model):
         db_table = '"hamilton"."lastkiss"'
         verbose_name = "Lastkiss"
         verbose_name_plural = "Lastkiss"
-
 
 class Altadesistencia(models.Model):
     pk_alta_desistencia = models.AutoField(primary_key=True, verbose_name="ID")
@@ -297,13 +419,37 @@ class Altadesistencia(models.Model):
         db_column='fk_paciente',
         verbose_name="Paciente"
     )
+    dat_sessao = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data da Sessão"
+    )
+    cancelador = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=[
+            ('paciente', 'Paciente'),
+            ('terapeuta', 'Terapeuta'),
+        ],
+        verbose_name="Cancelador"
+    )
+    motivo_cancel = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Motivo do Cancelamento"
+    )
+    momento = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Momento"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
-        managed = False
         db_table = '"hamilton"."altadesistencia"'
         verbose_name = "Altadesistencia"
         verbose_name_plural = "Altadesistencia"
-        
