@@ -495,9 +495,9 @@ class LastkissAdmin(admin.ModelAdmin):
 
 @admin.register(Altadesistencia)
 class AltadesistenciaAdmin(admin.ModelAdmin):
-    list_display = ('paciente_nome', 'terapeuta_nome', 'dat_sessao', 'cancelador', 'created_at')
-    list_filter = ('fk_terapeuta', 'fk_paciente', 'cancelador', 'dat_sessao')
-    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome', 'motivo_cancel')
+    list_display = ('paciente_nome', 'terapeuta_nome', 'dat_sessao', 'cancelador', 'momento', 'created_at')
+    list_filter = ('fk_terapeuta', 'fk_paciente', 'cancelador', 'dat_sessao', 'momento')
+    search_fields = ('fk_paciente__nome', 'fk_terapeuta__nome', 'motivo_cancel', 'momento')
     readonly_fields = ('created_at', 'updated_at')
     
     def get_fieldsets(self, request, obj=None):
@@ -506,7 +506,7 @@ class AltadesistenciaAdmin(admin.ModelAdmin):
                 'fields': ('fk_terapeuta', 'fk_paciente')
             }),
             ('Detalhes da Sessão', {
-                'fields': ('dat_sessao', 'cancelador', 'motivo_cancel')
+                'fields': ('dat_sessao', 'cancelador', 'momento', 'motivo_cancel')
             }),
         ]
         
@@ -541,4 +541,4 @@ class AltadesistenciaAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj:  # Em modo de edição
             return self.readonly_fields
-        return ()  # Em modo de criação, nenhum campo somente-leitura
+        return () 

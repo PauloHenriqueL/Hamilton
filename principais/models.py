@@ -105,7 +105,7 @@ class Paciente(models.Model):
     )
     
     dat_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
-    vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Sessão")
+    vlr_sessao = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor da Acordado")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     oberservacao = models.TextField(null=True, blank=True, verbose_name="Observações")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
@@ -405,7 +405,6 @@ class Lastkiss(models.Model):
         verbose_name = "Lastkiss"
         verbose_name_plural = "Lastkiss"
 
-
 class Altadesistencia(models.Model):
     pk_alta_desistencia = models.AutoField(primary_key=True, verbose_name="ID")
     fk_terapeuta = models.ForeignKey(
@@ -440,6 +439,12 @@ class Altadesistencia(models.Model):
         blank=True,
         verbose_name="Motivo do Cancelamento"
     )
+    momento = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Momento"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
@@ -448,4 +453,3 @@ class Altadesistencia(models.Model):
         db_table = '"hamilton"."altadesistencia"'
         verbose_name = "Altadesistencia"
         verbose_name_plural = "Altadesistencia"
-
