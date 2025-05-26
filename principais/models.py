@@ -443,6 +443,10 @@ class Altadesistencia(models.Model):
         max_length=255,
         null=True,
         blank=True,
+        choices=[
+            ('Antes da primeira sessão', 'Antes da primeira sessão'),
+            ('Depois da primeira sessão', 'Depois da primeira sessão'),
+        ],
         verbose_name="Momento"
     )
 
