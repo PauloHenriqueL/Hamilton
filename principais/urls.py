@@ -12,7 +12,8 @@ urlpatterns = [
     
     path('api/v1/consulta/', views.ConsultaListCreateAPIView.as_view(), name='consulta-list-create-api'),
     path('api/v1/consulta/<int:pk>/', views.ConsultaRetrieveUpdateDestroyAPIView.as_view(), name='consulta-detail-api'),
-    
+
+    path('altadesistencia/nova/', views.AltaDesistenciaCreateView.as_view(), name='altadesistencia-create'),
     
     path('api/v1/paciente/', views.PacienteListCreateAPIView.as_view(), name='paciente-list-create-api'),
     path('api/v1/paciente/<int:pk>/', views.PacienteRetrieveUpdateDestroyAPIView.as_view(), name='paciente-detail-api'),

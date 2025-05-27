@@ -112,3 +112,55 @@ def clean(self):
         self.add_error('is_pago', 'Uma consulta não realizada não pode estar paga.')
     
     return cleaned_data
+
+class AltaDesistenciaForm(forms.ModelForm):
+    
+    class Meta:
+        model = models.Altadesistencia
+        fields = [
+            'fk_terapeuta', 
+            'fk_paciente', 
+            'dat_sessao',
+            'cancelador',
+            'motivo_cancel',
+            'momento',
+        ]
+        widgets = {
+            'fk_terapeuta': forms.Select(attrs={'class': 'form-control'}),
+            'fk_paciente': forms.Select(attrs={'class': 'form-control'}),
+            'dat_sessao': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'cancelador': forms.Select(attrs={'class': 'form-control'}),
+            'motivo_cancel': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'momento': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'fk_terapeuta': 'Terapeuta', 
+            'fk_paciente': 'Paciente', 
+            'dat_sessao': 'Data da Sessão',
+            'cancelador': 'Quem cancelou?',
+            'motivo_cancel': 'Motivo do Cancelamento',
+            'momento': 'Quando ocorreu?',
+        }
+
+    # Campo oculto para manter o valor do terapeuta quando o campo estiver disabled
+    terapeuta_hidden = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    
+    def __init__(self, *args, **kwargs):
+        # Extrair parâmetros customizados antes de chamar super()
+        user_terapeuta = kwargs.pop('user_terapeuta', None)
+        super().__init__(*args, **kwargs)
+        
+        # Se um terapeuta foi passado para o formulário, configurar os campos
+        if user_terapeuta:
+            # Definir o valor inicial e desabilitar o campo
+            self.fields['fk_terapeuta'].initial = user_terapeuta.pk_terapeuta
+            self.fields['fk_terapeuta'].widget.attrs.update({
+                'disabled': 'disabled',
+                'readonly': 'readonly'
+            })
+            
+            # Definir o campo oculto
+            self.fields['terapeuta_hidden'].initial = user_terapeuta.pk_terapeuta
+            
+            # IMPORTANTE: Marcar o campo como não obrigatório quando desabilitado
+            self.fields['fk_terapeuta'].required = False

@@ -23,6 +23,14 @@
               </a>
             </li>
           {% endif %}
+          {% if perms.principais.view_consulta %}
+            <li>
+              <a href="{% url 'altadesistencia-create' %}" class="nav-link px-0 align-middle">
+                <i class="bi bi-person-check-fill fs-4"></i>
+                <span class="ms-1">Altas</span>
+              </a>
+            </li>
+          {% endif %}
           <li class="nav-item">
             {% if user.is_authenticated %}
             <form action="{% url 'logout' %}" method="post" id="logout-form" class="nav-link px-0 align-middle">

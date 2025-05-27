@@ -12,6 +12,8 @@ from .models import Paciente
 from django.views.decorators.http import require_GET
 from decimal import Decimal
 from acessorios.models import TerapeutaUser
+from django.contrib import messages
+
 
 @require_GET
 def paciente_valor_sessao(request, pk):
@@ -209,6 +211,59 @@ class ConsultaDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView
     success_url = reverse_lazy('consulta-list')
     permission_required = 'principais.delete_consulta'
 
+class AltaDesistenciaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = models.Altadesistencia
+    template_name = 'altadesistencia_create.html'
+    form_class = forms.AltaDesistenciaForm
+    success_url = reverse_lazy('consulta-list')  # Redireciona para lista de consultas
+    permission_required = 'principais.add_altadesistencia'
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        
+        # Se o usuário for um terapeuta, pré-selecionar e desabilitar o campo terapeuta
+        try:
+            terapeuta_user = TerapeutaUser.objects.get(usuario=self.request.user)
+            terapeuta = terapeuta_user.terapeuta
+            
+            # Definir o valor inicial
+            form.fields['fk_terapeuta'].initial = terapeuta.pk_terapeuta
+            
+            # Em vez de disabled, usar readonly para manter o valor
+            form.fields['fk_terapeuta'].widget.attrs.update({
+                'readonly': 'readonly',
+                'style': 'pointer-events: none; background-color: #343a40 !important; color: #ffffff !important; border-color: #495057 !important;'
+            })
+            
+            # Criar um queryset que só contenha este terapeuta
+            form.fields['fk_terapeuta'].queryset = form.fields['fk_terapeuta'].queryset.filter(pk=terapeuta.pk_terapeuta)
+            
+        except TerapeutaUser.DoesNotExist:
+            # Se o usuário não for terapeuta, mas for staff, permite selecionar
+            pass
+        
+        return form
+    
+    def form_valid(self, form):
+        # Cria a instância base sem salvar
+        altadesistencia = form.save(commit=False)
+        
+        # Se o usuário for um terapeuta, garanta que seja associada a ele
+        try:
+            terapeuta_user = TerapeutaUser.objects.get(usuario=self.request.user)
+            altadesistencia.fk_terapeuta = terapeuta_user.terapeuta
+        except TerapeutaUser.DoesNotExist:
+            # Se não for terapeuta, usa o valor do formulário
+            if not altadesistencia.fk_terapeuta:
+                messages.error(self.request, 'Erro: Terapeuta não foi definido corretamente.')
+                return self.form_invalid(form)
+        
+        # Salva a alta/desistência
+        altadesistencia.save()
+        
+        messages.success(self.request, 'Alta/Desistência cadastrada com sucesso!')
+        
+        return super().form_valid(form)
 
 # API Views - Padronizados os nomes e adicionadas permissões consistentes
 
