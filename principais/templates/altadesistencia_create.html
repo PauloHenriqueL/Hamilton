@@ -48,13 +48,15 @@ ALLOS - Cadastrar Alta/Desistência
               {% endif %}
             </div>
             
+            <!-- Campo Alta/Desistência -->
             <div class="col-md-6 mb-3">
-              <label for="{{ form.cancelador.id_for_label }}" class="form-label">{{ form.cancelador.label }}</label>
-              {{ form.cancelador }}
-              {% if form.cancelador.errors %}
-                <div class="invalid-feedback d-block">{{ form.cancelador.errors }}</div>
+              <label for="{{ form.alta_desistencia.id_for_label }}" class="form-label">{{ form.alta_desistencia.label }}</label>
+              {{ form.alta_desistencia }}
+              {% if form.alta_desistencia.errors %}
+                <div class="invalid-feedback d-block">{{ form.alta_desistencia.errors }}</div>
               {% endif %}
             </div>
+            
             
             <div class="col-md-6 mb-3">
               <label for="{{ form.momento.id_for_label }}" class="form-label">{{ form.momento.label }}</label>
@@ -82,4 +84,6 @@ ALLOS - Cadastrar Alta/Desistência
       </div>
     </div>
   </div>
+
+
 {% endblock %}

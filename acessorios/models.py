@@ -21,9 +21,11 @@ class Captacao(models.Model):
         return self.nome
 
     class Meta:
-        db_table = '"hamilton"."captacoes"'
+        managed = False
+        db_table = "captacoes"
         verbose_name = "Captação"
         verbose_name_plural = "Captações"
+
 
 class Clinica(models.Model):
     pk_clinica = models.AutoField(primary_key=True, verbose_name="ID")
@@ -40,9 +42,11 @@ class Clinica(models.Model):
         return self.clinica
 
     class Meta:
-        db_table = '"hamilton"."clinicas"'
+        managed = False
+        db_table = "clinicas"
         verbose_name = "Clínica"
         verbose_name_plural = "Clínicas"
+
 
 class Modalidade(models.Model):
     pk_modalidade = models.AutoField(primary_key=True, verbose_name="ID")
@@ -59,9 +63,11 @@ class Modalidade(models.Model):
         return self.modalidade
     
     class Meta:
-        db_table = '"hamilton"."modalidades"'
+        managed = False
+        db_table = "modalidades"
         verbose_name = "Modalidade"
         verbose_name_plural = "Modalidades"
+
 
 class Nucleo(models.Model):
     pk_nucleo = models.AutoField(primary_key=True, verbose_name="ID")
@@ -78,9 +84,11 @@ class Nucleo(models.Model):
         return self.nucleo
 
     class Meta:
-        db_table = '"hamilton"."nucleos"'
+        managed = False
+        db_table = "nucleos"
         verbose_name = "Núcleo"
         verbose_name_plural = "Núcleos"
+
 
 class Abordagem(models.Model):
     pk_abordagem = models.AutoField(primary_key=True, verbose_name="ID")
@@ -97,9 +105,11 @@ class Abordagem(models.Model):
         return self.abordagem
 
     class Meta:
-        db_table = '"hamilton"."abordagens"'
+        managed = False
+        db_table = "abordagens"
         verbose_name = "Abordagem"
         verbose_name_plural = "Abordagens"
+
 
 class Prefeidade(models.Model):
     pk_prefeidade = models.AutoField(primary_key=True, verbose_name="ID")
@@ -122,7 +132,8 @@ class Prefeidade(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        db_table = '"hamilton"."prefeidades"'
+        managed = False
+        db_table = "prefeidades"
         constraints = [
             models.UniqueConstraint(
                 fields=['fk_terapeuta'], 
@@ -148,8 +159,8 @@ class TerapeutaUser(models.Model):
     )
     
     class Meta:
-        managed = False  # Manter se você não quer que o Django gerencie essa tabela
-        db_table = '"hamilton"."terapeuta_usuarios"'
+        managed = False  # Manter se voê não quer que o Django gerencie essa tabela
+        db_table = "terapeuta_usuarios"
         constraints = [
             models.UniqueConstraint(
                 fields=['terapeuta'], 
@@ -161,3 +172,5 @@ class TerapeutaUser(models.Model):
         
     def __str__(self):
         return f"{self.usuario.username} - {self.terapeuta.nome if self.terapeuta else 'Sem terapeuta'}"
+
+

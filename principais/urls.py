@@ -24,12 +24,9 @@ urlpatterns = [
     path('api/v1/decano/', views.DecanoListCreateAPIView.as_view(), name='decano-list-create-api'),
     path('api/v1/decano/<int:pk>/', views.DecanoRetrieveUpdateDestroyAPIView.as_view(), name='decano-detail-api'),
 
-    path('api/v1/firstkiss', views.FirstkissListCreateAPIView.as_view(), name='firstkiss-list'),
-    path('api/v1/firstkiss/<int:pk>', views.FirstkissRetrieveUpdateDestroyAPIView.as_view(), name='firstkiss-update'),
+    path('api/v1/avaliacao', views.AvaliacaoListCreateAPIView.as_view(), name='avaliacao-list'),
+    path('api/v1/avaliacao/<int:pk>', views.AvaliacaoRetrieveUpdateDestroyAPIView.as_view(), name='avaliacao-update'),
 
-    path('api/v1/lastkiss', views.LastkissListCreateAPIView.as_view(), name='lastkiss-list'),
-    path('api/v1/lastkiss/<int:pk>', views.LastkissRetrieveUpdateDestroyAPIView.as_view(), name='lastkiss-update'),
-    
     path('api/v1/altadesistencia', views.AltadesistenciaListCreateAPIView.as_view(), name='altadesistencia-list'),
     path('api/v1/altadesistencia/<int:pk>', views.AltadesistenciaRetrieveUpdateDestroyAPIView.as_view(), name='altadesistencia-update'),
 ]

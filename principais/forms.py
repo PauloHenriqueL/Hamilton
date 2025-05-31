@@ -113,6 +113,7 @@ def clean(self):
     
     return cleaned_data
 
+
 class AltaDesistenciaForm(forms.ModelForm):
     
     class Meta:
@@ -121,7 +122,7 @@ class AltaDesistenciaForm(forms.ModelForm):
             'fk_terapeuta', 
             'fk_paciente', 
             'dat_sessao',
-            'cancelador',
+            'alta_desistencia',  # Campo adicionado
             'motivo_cancel',
             'momento',
         ]
@@ -129,7 +130,7 @@ class AltaDesistenciaForm(forms.ModelForm):
             'fk_terapeuta': forms.Select(attrs={'class': 'form-control'}),
             'fk_paciente': forms.Select(attrs={'class': 'form-control'}),
             'dat_sessao': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'cancelador': forms.Select(attrs={'class': 'form-control'}),
+            'alta_desistencia': forms.Select(attrs={'class': 'form-control'}),  # Widget adicionado
             'motivo_cancel': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'momento': forms.Select(attrs={'class': 'form-control'}),
         }
@@ -137,7 +138,7 @@ class AltaDesistenciaForm(forms.ModelForm):
             'fk_terapeuta': 'Terapeuta', 
             'fk_paciente': 'Paciente', 
             'dat_sessao': 'Data da Sessão',
-            'cancelador': 'Quem cancelou?',
+            'alta_desistencia': 'Alta ou Desistência',  # Label adicionado
             'motivo_cancel': 'Motivo do Cancelamento',
             'momento': 'Quando ocorreu?',
         }

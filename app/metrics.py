@@ -8,348 +8,225 @@ from principais import models
 
 
 def get_consulta_metrics():
-    """Obter métricas gerais sobre consultas"""
-    # Métricas originais
-    total_consultas = models.Consulta.objects.count()
-    consultas_realizadas = models.Consulta.objects.filter(is_realizado=True).count()
-    consultas_pagas = models.Consulta.objects.filter(is_pago=True).count()
-    
-    valor_total_consultas = models.Consulta.objects.aggregate(
-        total=Sum('vlr_consulta')
-    )['total'] or 0
-    
-    valor_total_recebido = models.Consulta.objects.filter(is_pago=True).aggregate(
-        total=Sum('vlr_pago')
-    )['total'] or 0
-    
-    consultas_pendentes = models.Consulta.objects.filter(
-        Q(is_realizado=False) | Q(is_realizado=None)
-    ).count()
-
-    # Novas métricas para a Allos
+    """Obter métricas gerais sobre consultas - OTIMIZADA"""
     hoje = timezone.now().date()
     primeiro_dia_mes = hoje.replace(day=1)
     
-    # ---- MÉTRICAS FINANCEIRAS ----
+    # UMA query para todas as métricas de consulta
+    consulta_stats = models.Consulta.objects.aggregate(
+        total_consultas=Count('pk_consulta'),
+        consultas_realizadas=Count('pk_consulta', filter=Q(is_realizado=True)),
+        consultas_pagas=Count('pk_consulta', filter=Q(is_pago=True)),
+        consultas_pendentes=Count('pk_consulta', filter=Q(is_realizado=False) | Q(is_realizado=None)),
+        valor_total_consultas=Sum('vlr_consulta'),
+        valor_total_recebido=Sum('vlr_pago', filter=Q(is_pago=True)),
+        preco_medio_esperado=Avg('fk_paciente__vlr_sessao'),
+        total_sessoes_mes=Count('pk_consulta', filter=Q(
+            dat_consulta__gte=primeiro_dia_mes,
+            is_realizado=True
+        )),
+        receita_total_mes=Sum('vlr_pago', filter=Q(
+            dat_consulta__gte=primeiro_dia_mes,
+            is_pago=True
+        ))
+    )
     
-    # Preço médio acordado (média de vlr_sessao na tabela de pacientes ativos)
-    preco_medio_acordado = models.Paciente.objects.filter(is_active=True).aggregate(
-        avg_price=Avg('vlr_sessao')
-    )['avg_price'] or Decimal('0.00')
+    # UMA query para métricas de pacientes
+    paciente_stats = models.Paciente.objects.aggregate(
+        preco_medio_acordado=Avg('vlr_sessao', filter=Q(is_active=True)),
+        pacientes_ativos_count=Count('pk_paciente', filter=Q(is_active=True)),
+        vendas_mes=Count('pk_paciente', filter=Q(
+            created_at__gte=timezone.make_aware(datetime.combine(primeiro_dia_mes, datetime.min.time()))
+        ))
+    )
     
-    # Preço médio esperado (vlr_sessao somado da planilha de consultas / número de consultas)
-    preco_medio_esperado = models.Consulta.objects.aggregate(
-        avg_expected=Avg('fk_paciente__vlr_sessao')
-    )['avg_expected'] or Decimal('0.00')
-    
-    # Preço médio realizado (valor total do pix / número de consultas realizadas)
-    preco_medio_realizado = Decimal('0.00')
-    if consultas_realizadas > 0:
-        preco_medio_realizado = valor_total_recebido / consultas_realizadas
-    
-    # Receita realizada (valor total pix)
-    receita_realizada = valor_total_recebido
-    
-    # Receita esperada (consultas * vlr_consulta na tabela de consulta)
-    receita_esperada = models.Consulta.objects.aggregate(
-        total=Sum('vlr_consulta')
+    # Receita acordada em uma query
+    receita_acordada = models.Consulta.objects.select_related('fk_paciente').aggregate(
+        total=Sum('fk_paciente__vlr_sessao')
     )['total'] or Decimal('0.00')
     
-    # Receita acordada (consultas * vlr_sessao no cadastramento de paciente)
-    receita_acordada = Decimal('0.00')
-    consultas = models.Consulta.objects.all()
-    for consulta in consultas:
-        if consulta.fk_paciente and consulta.fk_paciente.vlr_sessao:
-            receita_acordada += consulta.fk_paciente.vlr_sessao
-    
-    # ---- DADOS CLÍNICOS ----
-    
-    # Taxa de adesão (realizados/total)
-    taxa_adesao = (consultas_realizadas / total_consultas * 100) if total_consultas > 0 else 0
-    
-    # Total de sessões (número de sessões realizadas)
-    total_sessoes = consultas_realizadas
-    
-    # Total de sessões do mês atual
-    total_sessoes_mes = models.Consulta.objects.filter(
-        dat_consulta__gte=primeiro_dia_mes,
-        is_realizado=True
-    ).count()
-    
-    # ---- DADOS BRUTOS ----
-    
-    # Número de vendas (pacientes cadastrados nesse mês)
-    vendas_mes = models.Paciente.objects.filter(
-        created_at__gte=timezone.make_aware(datetime.combine(primeiro_dia_mes, datetime.min.time()))
-    ).count()
-    
-    # Número de pacientes ativos
-    pacientes_ativos_count = models.Paciente.objects.filter(is_active=True).count()
-    
-    # Número de terapeutas
     total_terapeutas = models.Terapeuta.objects.count()
     
-    # Receita total do mês
-    receita_total_mes = models.Consulta.objects.filter(
-        dat_consulta__gte=primeiro_dia_mes,
-        is_pago=True
-    ).aggregate(
-        total=Sum('vlr_pago')
-    )['total'] or Decimal('0.00')
+    # Cálculos
+    total_consultas = consulta_stats['total_consultas'] or 0
+    consultas_realizadas = consulta_stats['consultas_realizadas'] or 0
+    valor_total_recebido = consulta_stats['valor_total_recebido'] or Decimal('0.00')
+    
+    taxa_adesao = (consultas_realizadas / total_consultas * 100) if total_consultas > 0 else 0
+    preco_medio_realizado = (valor_total_recebido / consultas_realizadas) if consultas_realizadas > 0 else Decimal('0.00')
 
-    return dict(
-        # Métricas originais
-        total_consultas=total_consultas,
-        consultas_realizadas=consultas_realizadas,
-        consultas_pagas=consultas_pagas,
-        consultas_pendentes=consultas_pendentes,
-        valor_total_consultas=number_format(valor_total_consultas, decimal_pos=2, force_grouping=True),
-        valor_total_recebido=number_format(valor_total_recebido, decimal_pos=2, force_grouping=True),
-        
-        # Métricas financeiras
-        preco_medio_acordado=number_format(preco_medio_acordado, decimal_pos=2, force_grouping=True),
-        preco_medio_esperado=number_format(preco_medio_esperado, decimal_pos=2, force_grouping=True),
-        preco_medio_realizado=number_format(preco_medio_realizado, decimal_pos=2, force_grouping=True),
-        receita_realizada=number_format(receita_realizada, decimal_pos=2, force_grouping=True),
-        receita_esperada=number_format(receita_esperada, decimal_pos=2, force_grouping=True),
-        receita_acordada=number_format(receita_acordada, decimal_pos=2, force_grouping=True),
-        
-        # Dados clínicos
-        taxa_adesao=number_format(taxa_adesao, decimal_pos=1),
-        total_sessoes=total_sessoes,
-        total_sessoes_mes=total_sessoes_mes,
-        
-        # Dados brutos
-        vendas_mes=vendas_mes,
-        pacientes_ativos_count=pacientes_ativos_count,
-        total_terapeutas=total_terapeutas,
-        
-        # Receita do mês
-        receita_total_mes=number_format(receita_total_mes, decimal_pos=2, force_grouping=True),
-    )
+    return {
+        'total_consultas': total_consultas,
+        'consultas_realizadas': consultas_realizadas,
+        'consultas_pagas': consulta_stats['consultas_pagas'] or 0,
+        'consultas_pendentes': consulta_stats['consultas_pendentes'] or 0,
+        'valor_total_consultas': number_format(consulta_stats['valor_total_consultas'] or 0, decimal_pos=2, force_grouping=True),
+        'valor_total_recebido': number_format(valor_total_recebido, decimal_pos=2, force_grouping=True),
+        'preco_medio_acordado': number_format(paciente_stats['preco_medio_acordado'] or 0, decimal_pos=2, force_grouping=True),
+        'preco_medio_esperado': number_format(consulta_stats['preco_medio_esperado'] or 0, decimal_pos=2, force_grouping=True),
+        'preco_medio_realizado': number_format(preco_medio_realizado, decimal_pos=2, force_grouping=True),
+        'receita_realizada': number_format(valor_total_recebido, decimal_pos=2, force_grouping=True),
+        'receita_esperada': number_format(consulta_stats['valor_total_consultas'] or 0, decimal_pos=2, force_grouping=True),
+        'receita_acordada': number_format(receita_acordada, decimal_pos=2, force_grouping=True),
+        'taxa_adesao': number_format(taxa_adesao, decimal_pos=1),
+        'total_sessoes': consultas_realizadas,
+        'total_sessoes_mes': consulta_stats['total_sessoes_mes'] or 0,
+        'vendas_mes': paciente_stats['vendas_mes'] or 0,
+        'pacientes_ativos_count': paciente_stats['pacientes_ativos_count'] or 0,
+        'total_terapeutas': total_terapeutas,
+        'receita_total_mes': number_format(consulta_stats['receita_total_mes'] or 0, decimal_pos=2, force_grouping=True),
+    }
 
 def get_terapeuta_metrics():
-    """Obter métricas de consultas por terapeuta"""
-    terapeutas = models.Terapeuta.objects.all()
+    """Obter métricas de consultas por terapeuta - OTIMIZADA"""
+    # UMA query com todas as agregações por terapeuta
+    terapeutas_stats = models.Terapeuta.objects.annotate(
+        total_consultas=Count('consulta'),
+        total_consultasrealizadas=Count('consulta', filter=Q(consulta__is_realizado=True)),
+        pacientes_ativos=Count('consulta__fk_paciente', distinct=True),
+        valor_recebido=Sum('consulta__vlr_pago', filter=Q(consulta__is_pago=True)),
+        receita_esperada=Sum('consulta__vlr_consulta')
+    ).values(
+        'nome',
+        'total_consultas',
+        'total_consultasrealizadas', 
+        'pacientes_ativos',
+        'valor_recebido',
+        'receita_esperada'
+    )
     
-    # Métricas por terapeuta detalhadas
     metricas_detalhadas = []
-    
-    for terapeuta in terapeutas:
-        # Total de consultas marcadas
-        total_consultas_terapeuta = models.Consulta.objects.filter(
-            fk_terapeuta=terapeuta
-        ).count()
+    for stats in terapeutas_stats:
+        total_consultas = stats['total_consultas'] or 0
+        total_realizadas = stats['total_consultasrealizadas'] or 0
+        valor_recebido = stats['valor_recebido'] or Decimal('0.00')
+        receita_esperada = stats['receita_esperada'] or Decimal('0.00')
         
-        # Total de consultas realizadas
-        total_consultasrealizadas_terapeuta = models.Consulta.objects.filter(
-            fk_terapeuta=terapeuta,
-            is_realizado=True
-        ).count()
-        
-        # Taxa de adesão (consultas realizadas / consultas marcadas)
-        taxa_adesao_terapeuta = (
-            total_consultasrealizadas_terapeuta / total_consultas_terapeuta * 100
-        ) if total_consultas_terapeuta > 0 else 0
-        
-        # Número de pacientes ativos (pacientes únicos com consultas)
-        pacientes_ativos_terapeuta = models.Consulta.objects.filter(
-            fk_terapeuta=terapeuta
-        ).values('fk_paciente').distinct().count()
-        
-        # Valor total recebido pelo terapeuta
-        valor_recebido_terapeuta = models.Consulta.objects.filter(
-            fk_terapeuta=terapeuta,
-            is_pago=True
-        ).aggregate(
-            total=Sum('vlr_pago')
-        )['total'] or Decimal('0.00')
-        
-        # Receita esperada do terapeuta
-        receita_esperada_terapeuta = models.Consulta.objects.filter(
-            fk_terapeuta=terapeuta
-        ).aggregate(
-            total=Sum('vlr_consulta')
-        )['total'] or Decimal('0.00')
-        
-        diferenca = valor_recebido_terapeuta - receita_esperada_terapeuta
-        
-        # Formatando o valor da diferença
-        diferenca_formatada = number_format(diferenca, decimal_pos=2, force_grouping=True)
-        
-        # Determinar se é positivo, negativo ou zero para estilização no frontend
-        status_diferenca = "igual"
-        if diferenca > 0:
-            status_diferenca = "positivo"
-        elif diferenca < 0:
-            status_diferenca = "negativo"
+        taxa_adesao = (total_realizadas / total_consultas * 100) if total_consultas > 0 else 0
+        diferenca = valor_recebido - receita_esperada
+        status_diferenca = "positivo" if diferenca > 0 else ("negativo" if diferenca < 0 else "igual")
         
         metricas_detalhadas.append({
-            'nome': terapeuta.nome,
-            'taxa_adesao': number_format(taxa_adesao_terapeuta, decimal_pos=1),
-            'pacientes_ativos': pacientes_ativos_terapeuta,
-            'total_consultas': total_consultas_terapeuta,
-            'total_consultasrealizadas': total_consultasrealizadas_terapeuta,
-            'valor_recebido': number_format(valor_recebido_terapeuta, decimal_pos=2, force_grouping=True),
-            'receita_esperada': number_format(receita_esperada_terapeuta, decimal_pos=2, force_grouping=True),
-            'diferenca': diferenca_formatada,
+            'nome': stats['nome'],
+            'taxa_adesao': number_format(taxa_adesao, decimal_pos=1),
+            'pacientes_ativos': stats['pacientes_ativos'] or 0,
+            'total_consultas': total_consultas,
+            'total_consultasrealizadas': total_realizadas,
+            'valor_recebido': number_format(valor_recebido, decimal_pos=2, force_grouping=True),
+            'receita_esperada': number_format(receita_esperada, decimal_pos=2, force_grouping=True),
+            'diferenca': number_format(diferenca, decimal_pos=2, force_grouping=True),
             'status_diferenca': status_diferenca
         })
     
-    # Retorna as métricas detalhadas para uso no template
     return metricas_detalhadas
 
 def get_daily_consultas_data():
-    """Obter dados diários de consultas para os últimos 7 dias"""
+    """Obter dados diários de consultas - OTIMIZADA"""
     today = timezone.now().date()
-    dates = [str(today - timezone.timedelta(days=i)) for i in range(6, -1, -1)]
-    values = []
-
-    for date in dates:
-        consultas_count = models.Consulta.objects.filter(dat_consulta=date).count()
-        values.append(consultas_count)
-
-    return dict(
-        dates=dates,
-        values=values,
-    )
-
-def get_monthly_consultas_data():
-    """Obter dados mensais de consultas para os últimos 6 meses"""
-    today = timezone.now().date()
+    last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
     
-    # Calcular o primeiro dia do mês atual e dos 5 meses anteriores
-    meses = []
-    valores = []
+    # UMA query para todos os dias
+    daily_stats = models.Consulta.objects.filter(
+        dat_consulta__in=last_7_days
+    ).values('dat_consulta').annotate(
+        consultas_count=Count('pk_consulta')
+    ).order_by('dat_consulta')
     
-    for i in range(5, -1, -1):
-        # Calcular o primeiro dia do mês i meses atrás
-        month = today.month - i
-        year = today.year
-        # Ajustar o ano se necessário
-        while month <= 0:
-            month += 12
-            year -= 1
-        
-        first_day = datetime(year, month, 1).date()
-        # Calcular o primeiro dia do próximo mês
-        if month == 12:
-            next_month_first_day = datetime(year + 1, 1, 1).date()
-        else:
-            next_month_first_day = datetime(year, month + 1, 1).date()
-        
-        # Nome do mês
-        meses.append(first_day.strftime('%b/%Y'))
-        
-        # Contar consultas neste mês
-        consultas_count = models.Consulta.objects.filter(
-            dat_consulta__gte=first_day,
-            dat_consulta__lt=next_month_first_day
-        ).count()
-        valores.append(consultas_count)
-    
-    return dict(
-        months=meses,
-        values=valores,
-    )
-
-def get_monthly_receita_data():
-    """Obter dados mensais de receita para os últimos 6 meses"""
-    today = timezone.now().date()
-    
-    # Calcular o primeiro dia do mês atual e dos 5 meses anteriores
-    meses = []
-    valores = []
-    
-    for i in range(5, -1, -1):
-        # Calcular o primeiro dia do mês i meses atrás
-        month = today.month - i
-        year = today.year
-        # Ajustar o ano se necessário
-        while month <= 0:
-            month += 12
-            year -= 1
-        
-        first_day = datetime(year, month, 1).date()
-        # Calcular o primeiro dia do próximo mês
-        if month == 12:
-            next_month_first_day = datetime(year + 1, 1, 1).date()
-        else:
-            next_month_first_day = datetime(year, month + 1, 1).date()
-        
-        # Nome do mês
-        meses.append(first_day.strftime('%b/%Y'))
-        
-        # Calcular receita neste mês
-        receita = models.Consulta.objects.filter(
-            dat_consulta__gte=first_day,
-            dat_consulta__lt=next_month_first_day,
-            is_pago=True
-        ).aggregate(
-            total=Sum('vlr_pago')
-        )['total'] or Decimal('0.00')
-        
-        valores.append(float(receita))
-    
-    return dict(
-        months=meses,
-        values=valores,
-    )
-
-def get_daily_valor_data():
-    """Obter dados diários de valor das consultas para os últimos 7 dias"""
-    today = timezone.now().date()
-    dates = [str(today - timezone.timedelta(days=i)) for i in range(6, -1, -1)]
-    values = []
-
-    for date in dates:
-        valor_total = models.Consulta.objects.filter(dat_consulta=date).aggregate(
-            total=Sum('vlr_consulta')
-        )['total'] or 0
-        values.append(float(valor_total))
-
-    return dict(
-        dates=dates,
-        values=values,
-    )
-
-def get_consultas_por_status():
-    """Obter contagem de consultas por status (pago/não pago, realizado/não realizado)"""
-    total_pagas = models.Consulta.objects.filter(is_pago=True).count()
-    total_nao_pagas = models.Consulta.objects.filter(Q(is_pago=False) | Q(is_pago=None)).count()
-    
-    total_realizadas = models.Consulta.objects.filter(is_realizado=True).count()
-    total_nao_realizadas = models.Consulta.objects.filter(Q(is_realizado=False) | Q(is_realizado=None)).count()
-    
-    # Modificação: Usar nomes de chaves em minúsculas e sem acentos para consistência com o JavaScript
-    pagamento_status = {
-        'pago': total_pagas,
-        'pendente': total_nao_pagas
-    }
-    
-    realizacao_status = {
-        'realizada': total_realizadas,
-        'nao_realizada': total_nao_realizadas
-    }
+    # Criar dicionário para lookup rápido
+    daily_dict = {str(item['dat_consulta']): item['consultas_count'] for item in daily_stats}
     
     return {
-        'pagamento_status_data': pagamento_status,
-        'realizacao_status_data': realizacao_status
+        'dates': [str(date) for date in last_7_days],
+        'values': [daily_dict.get(str(date), 0) for date in last_7_days]
+    }
+
+def get_monthly_consultas_data():
+    """Obter dados mensais de consultas - OTIMIZADA"""
+    today = timezone.now().date()
+    six_months_ago = today - timedelta(days=180)
+    
+    # UMA query para todos os meses
+    monthly_stats = models.Consulta.objects.filter(
+        dat_consulta__gte=six_months_ago
+    ).annotate(
+        month=TruncMonth('dat_consulta')
+    ).values('month').annotate(
+        consultas_count=Count('pk_consulta')
+    ).order_by('month')
+    
+    return {
+        'months': [item['month'].strftime('%b/%Y') for item in monthly_stats],
+        'values': [item['consultas_count'] for item in monthly_stats]
+    }
+
+def get_monthly_receita_data():
+    """Obter dados mensais de receita - OTIMIZADA"""
+    today = timezone.now().date()
+    six_months_ago = today - timedelta(days=180)
+    
+    # UMA query para todos os meses
+    monthly_stats = models.Consulta.objects.filter(
+        dat_consulta__gte=six_months_ago,
+        is_pago=True
+    ).annotate(
+        month=TruncMonth('dat_consulta')
+    ).values('month').annotate(
+        receita_total=Sum('vlr_pago')
+    ).order_by('month')
+    
+    return {
+        'months': [item['month'].strftime('%b/%Y') for item in monthly_stats],
+        'values': [float(item['receita_total'] or 0) for item in monthly_stats]
+    }
+
+def get_daily_valor_data():
+    """Obter dados diários de valor - OTIMIZADA"""
+    today = timezone.now().date()
+    last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    
+    # UMA query para todos os dias
+    daily_stats = models.Consulta.objects.filter(
+        dat_consulta__in=last_7_days
+    ).values('dat_consulta').annotate(
+        valor_total=Sum('vlr_consulta')
+    ).order_by('dat_consulta')
+    
+    # Criar dicionário para lookup rápido
+    daily_dict = {str(item['dat_consulta']): float(item['valor_total'] or 0) for item in daily_stats}
+    
+    return {
+        'dates': [str(date) for date in last_7_days],
+        'values': [daily_dict.get(str(date), 0) for date in last_7_days]
+    }
+
+def get_consultas_por_status():
+    """Obter contagem de consultas por status - OTIMIZADA"""
+    # UMA query para todos os status
+    status_stats = models.Consulta.objects.aggregate(
+        total_pagas=Count('pk_consulta', filter=Q(is_pago=True)),
+        total_nao_pagas=Count('pk_consulta', filter=Q(is_pago=False) | Q(is_pago=None)),
+        total_realizadas=Count('pk_consulta', filter=Q(is_realizado=True)),
+        total_nao_realizadas=Count('pk_consulta', filter=Q(is_realizado=False) | Q(is_realizado=None))
+    )
+    
+    return {
+        'pagamento_status_data': {
+            'pago': status_stats['total_pagas'],
+            'pendente': status_stats['total_nao_pagas']
+        },
+        'realizacao_status_data': {
+            'realizada': status_stats['total_realizadas'],
+            'nao_realizada': status_stats['total_nao_realizadas']
+        }
     }
 
 def get_pacientes_ativos():
-    """Obter pacientes com mais consultas"""
-    pacientes = models.Paciente.objects.all()
-    consultas_por_paciente = {}
+    """Obter pacientes com mais consultas - OTIMIZADA"""
+    # UMA query para os top 5 pacientes
+    top_pacientes = models.Paciente.objects.annotate(
+        consultas_count=Count('consulta')
+    ).filter(
+        consultas_count__gt=0
+    ).order_by('-consultas_count')[:5].values('nome', 'consultas_count')
     
-    for paciente in pacientes:
-        consultas_count = models.Consulta.objects.filter(fk_paciente=paciente).count()
-        if consultas_count > 0:  # Mostrar apenas pacientes com consultas
-            consultas_por_paciente[paciente.nome] = consultas_count
-    
-    # Ordernar e pegar os top 5
-    top_pacientes = dict(sorted(consultas_por_paciente.items(), 
-                                key=lambda item: item[1], 
-                                reverse=True)[:5])
-    
-    return top_pacientes
+    return {item['nome']: item['consultas_count'] for item in top_pacientes}

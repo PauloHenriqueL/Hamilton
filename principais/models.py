@@ -37,8 +37,9 @@ class Decano(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
+        managed = False
         ordering = ['nome']
-        db_table = '"hamilton"."decanos"'
+        db_table = "decanos"
         verbose_name = "Decano"
         verbose_name_plural = "Decanos"
    
@@ -115,8 +116,9 @@ class Paciente(models.Model):
         return self.nome
 
     class Meta:
+        managed = False
         ordering = ['nome']
-        db_table = '"hamilton"."pacientes"'
+        db_table = "pacientes"
         verbose_name = "Paciente"
         verbose_name_plural = "Pacientes"
 
@@ -188,7 +190,7 @@ class Terapeuta(models.Model):
     class Meta:
         managed = False
         ordering = ['nome']
-        db_table = '"hamilton"."terapeutas"'
+        db_table = "terapeutas"
         verbose_name = "Terapeuta"
         verbose_name_plural = "Terapeutas"
     
@@ -228,7 +230,7 @@ class Consulta(models.Model):
 
     class Meta:
         managed = False
-        db_table = '"hamilton"."consultas"'
+        db_table = "consultas"
         verbose_name = 'Consulta'
         verbose_name_plural = 'Consultas'
         constraints = [
@@ -242,168 +244,6 @@ class Consulta(models.Model):
     def __str__(self):
         return f"Consulta do {self.fk_paciente} pelo {self.fk_terapeuta}"
 
-
-class Firstkiss(models.Model):
-    pk_firstkiss = models.AutoField(primary_key=True, verbose_name="ID")
-    fk_terapeuta = models.ForeignKey(
-        Terapeuta, 
-        on_delete=models.CASCADE, 
-        db_column='fk_terapeuta',
-        verbose_name="Terapeuta"
-    )
-    fk_paciente = models.ForeignKey(
-        Paciente, 
-        on_delete=models.CASCADE, 
-        db_column='fk_paciente',
-        verbose_name="Paciente"
-    )
-    dat_consulta = models.DateField(verbose_name="Data da primeira sessão")
-    
-    consentimento_paciente = models.BooleanField(
-        default=False, 
-        verbose_name="Consentimento do Paciente"
-    )
-    individual = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Bem-estar Pessoal (1-10)"
-    )
-    interpessoal = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Família/Relacionamentos Íntimos (1-10)"
-    )
-    social = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Trabalho/Faculdade/Família (1-10)"
-    )
-    geral = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Estado Geral de Bem-estar (1-10)"
-    )
-    acolhimento = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Acolhimento (1-10)"
-    )
-    abordagem = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Abordagem (1-10)"
-    )
-    expectativa = models.IntegerField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Expectativa (1-10)"
-    )
-    continuar_mesmo_terapeuta = models.BooleanField(
-        default=False,
-        verbose_name="Deseja continuar com o mesmo terapeuta"
-    )
-    
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
-
-    class Meta:
-        managed = False
-        db_table = '"hamilton"."firstkiss"'
-        verbose_name = "Firstkiss"
-        verbose_name_plural = "Firstkiss"
-
-
-class Lastkiss(models.Model):
-    pk_lastkiss = models.AutoField(primary_key=True, verbose_name="ID")
-    fk_terapeuta = models.ForeignKey(
-        Terapeuta, 
-        on_delete=models.CASCADE, 
-        db_column='fk_terapeuta',
-        verbose_name="Terapeuta"
-    )
-    fk_paciente = models.ForeignKey(
-        Paciente, 
-        on_delete=models.CASCADE, 
-        db_column='fk_paciente',
-        verbose_name="Paciente"
-    )
-    
-    consentimento_paciente = models.BooleanField(
-        null=True,
-        blank=True,
-        default=False, 
-        verbose_name="Consentimento do Paciente"
-    )
-    individual = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Bem-estar Pessoal (1-10)"
-    )
-    interpessoal = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Família/Relacionamentos Íntimos (1-10)"
-    )
-    social = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Trabalho/Faculdade/Família (1-10)"
-    )
-    geral = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Estado Geral de Bem-estar (1-10)"
-    )
-    acolhimento = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Acolhimento (1-10)"
-    )
-    abordagem = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Abordagem (1-10)"
-    )
-    expectativa = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Expectativa (1-10)"
-    )
-    terapia_outro_terapeuta = models.BooleanField(
-        null=True,
-        blank=True,
-        default=False,
-        verbose_name="Deseja realizar terapia com outro terapeuta"
-    )
-    recomendaria_outros = models.BooleanField(
-        null=True,
-        blank=True,
-        default=False,
-        verbose_name="Recomendaria a allos para outras pessoas"
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
-
-    class Meta:
-        managed = False
-        db_table = '"hamilton"."lastkiss"'
-        verbose_name = "Lastkiss"
-        verbose_name_plural = "Lastkiss"
 
 class Altadesistencia(models.Model):
     pk_alta_desistencia = models.AutoField(primary_key=True, verbose_name="ID")
@@ -424,16 +264,16 @@ class Altadesistencia(models.Model):
         blank=True,
         verbose_name="Data da Sessão"
     )
-    cancelador = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        choices=[
-            ('paciente', 'Paciente'),
-            ('terapeuta', 'Terapeuta'),
-        ],
-        verbose_name="Cancelador"
-    )
+#    cancelador = models.CharField(
+#        max_length=50,
+#        null=True,
+#        blank=True,
+#        choices=[
+#            ('paciente', 'Paciente'),
+#            ('terapeuta', 'Terapeuta'),
+#        ],
+#        verbose_name="Cancelador"
+#    )
     motivo_cancel = models.TextField(
         null=True,
         blank=True,
@@ -449,11 +289,104 @@ class Altadesistencia(models.Model):
         ],
         verbose_name="Momento"
     )
+    alta_desistencia = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=[
+            ('alta', 'Alta'),
+            ('desistencia', 'Desistencia'),
+        ],
+        verbose_name="Alta ou Desistencia"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+
+    class Meta:
+        managed = False
+        db_table = "altadesistencia"
+        verbose_name = "Altadesistencia"
+        verbose_name_plural = "Altadesistencia"
+
+
+class Avaliacao(models.Model):
+    pk_avaliacao = models.AutoField(primary_key=True, verbose_name="ID")
+    fk_terapeuta = models.ForeignKey(
+        Terapeuta, 
+        on_delete=models.CASCADE, 
+        db_column='fk_terapeuta',
+        verbose_name="Terapeuta"
+    )
+    fk_paciente = models.ForeignKey(
+        Paciente, 
+        on_delete=models.CASCADE, 
+        db_column='fk_paciente',
+        verbose_name="Paciente"
+    )
+    dat_consulta = models.DateField(verbose_name="Data da última sessão")
+    
+    consentimento_paciente = models.BooleanField(
+        null=True, 
+        blank=True,
+        default=False, 
+        verbose_name="Consentimento do Paciente"
+    )
+    individual = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Bem-estar Pessoal (1-10)"
+    )
+    interpessoal = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Família/Relacionamentos Íntimos (1-10)"
+    )
+    social = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Trabalho/Faculdade/Família (1-10)"
+    )
+    geral = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Estado Geral de Bem-estar (1-10)"
+    )
+    qualidade_geral = models.IntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name="Qualodade geral do atendimento (1-10)"
+    )
+    continuar_terapeuta = models.BooleanField(
+        default=False,
+        verbose_name="Deseja continuar com o mesmo terapeuta"
+    )
+    continuar_allos = models.BooleanField(
+        default=False,
+        verbose_name="Deseja continuar sendo atendido na Allos"
+    )
+    momento = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        choices=[
+            ('No início do processo (primeira sessão)', 'No início do processo (primeira sessão)'),
+            ('Durante o acompanhamento terapêutico', 'Durante o acompanhamento terapêutico'),
+            ('Após o encerramento da terapia', 'Após o encerramento da terapia'),
+        ],
+        verbose_name="Momento"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
 
     class Meta:
-        db_table = '"hamilton"."altadesistencia"'
-        verbose_name = "Altadesistencia"
-        verbose_name_plural = "Altadesistencia"
+        managed = False
+        db_table = "avaliação"
+        verbose_name = "Avaliação"
+        verbose_name_plural = "Avaliações"
+
